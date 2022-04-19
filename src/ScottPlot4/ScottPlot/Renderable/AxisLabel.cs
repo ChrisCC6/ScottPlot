@@ -1,65 +1,91 @@
 ﻿using ScottPlot.Drawing;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace ScottPlot.Renderable
 {
-    public class AxisLabel : IRenderable
+    public class AxisLabel : PropertyNotifier, IRenderable, INotifyPropertyChanged
     {
+        private bool isVisible = true;
         /// <summary>
         /// Controls whether this axis occupies space and is displayed
         /// </summary>
-        public bool IsVisible { get; set; } = true;
+        public bool IsVisible { get=> isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Edge of the data area this axis represents
         /// </summary>
         public Edge Edge;
 
+        private string label = null;
         /// <summary>
         /// Axis title
         /// </summary>
-        public string Label = null;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
+        private Drawing.Font font;
         /// <summary>
         /// Font options for the axis title
         /// </summary>
-        public Drawing.Font Font = new Drawing.Font() { Size = 16 };
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
 
+        private Bitmap imageLabel = null;
         /// <summary>
         /// Set this field to display a bitmap instead of a text axis label
         /// </summary>
-        public Bitmap ImageLabel = null;
+        public Bitmap ImageLabel { get => imageLabel; set { imageLabel = value; OnPropertyChanged(); } }
 
+        private float imagePaddingToDataArea = 5;
         /// <summary>
         /// Padding (in pixels) between the image and the edge of the data area
         /// </summary>
-        public float ImagePaddingToDataArea = 5;
+        public float ImagePaddingToDataArea { get => imagePaddingToDataArea; set { if (imagePaddingToDataArea == value) return; imagePaddingToDataArea = value; OnPropertyChanged(); } }
 
+        private float imagePaddingToFigureEdge = 5;
         /// <summary>
         /// Padding (in pixels) between the image and the edge of the figure
         /// </summary>
-        public float ImagePaddingToFigureEdge = 5;
+        public float ImagePaddingToFigureEdge { get => imagePaddingToFigureEdge; set { if (imagePaddingToFigureEdge == value) return; imagePaddingToFigureEdge = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Total amount (in pixels) to pad the image when measuring axis size
         /// </summary>
         public float ImagePadding => ImagePaddingToDataArea + ImagePaddingToFigureEdge;
 
+        private float pixelSizePadding;
         /// <summary>
         /// Amount of padding (in pixels) to surround the contents of this axis
         /// </summary>
-        public float PixelSizePadding;
+        public float PixelSizePadding { get => pixelSizePadding; set { if (pixelSizePadding == value) return; pixelSizePadding = value; OnPropertyChanged(); } }
 
+        private float pixelOffset;
         /// <summary>
         /// Distance to offset this axis to account for multiple axes
         /// </summary>
-        public float PixelOffset;
+        public float PixelOffset { get => pixelOffset; set { if (pixelOffset == value) return; pixelOffset = value; OnPropertyChanged(); } }
 
+        private float pixelSize;
         /// <summary>
         /// Exact size (in pixels) of the contents of this this axis
         /// </summary>
-        public float PixelSize;
+        public float PixelSize { get => pixelSize; set { if (pixelSize == value) return; pixelSize = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Return the size of the contents of this axis.
@@ -78,6 +104,11 @@ namespace ScottPlot.Renderable
             {
                 return GDI.MeasureString(Label, Font);
             }
+        }
+
+        public AxisLabel()
+        {
+            Font = new Drawing.Font() { Size = 16 };
         }
 
         public void Render(PlotDimensions dims, Bitmap bmp, bool lowQuality = false)

@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -15,20 +16,24 @@ namespace ScottPlot.Plottable
     /// </summary>
     public class LollipopPlot : BarPlotBase, IPlottable
     {
+
+        private string label { get; set; } = string.Empty;
         /// <summary>
         /// Name for this series of values that will appear in the legend
         /// </summary>
-        public string Label { get; set; }
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
+        private Color lollipopColor;
         /// <summary>
         /// Color of all lollipop components (the stick and the circle)
         /// </summary>
-        public Color LollipopColor { get; set; }
+        public Color LollipopColor { get => lollipopColor; set { lollipopColor = value; OnPropertyChanged(); } }
 
+        private float lollipopRadius = 5;
         /// <summary>
         /// Size of the circle at the end of each lollipop
         /// </summary>
-        public float LollipopRadius { get; set; } = 5;
+        public float LollipopRadius { get => lollipopRadius; set { lollipopRadius = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Create a lollipop plot from arrays of positions and sizes
@@ -49,16 +54,17 @@ namespace ScottPlot.Plottable
             Positions = positions ?? DataGen.Consecutive(values.Length);
         }
 
+
         public LegendItem[] GetLegendItems()
         {
             var singleItem = new LegendItem(this)
             {
-                label = Label,
-                color = LollipopColor,
-                lineWidth = 10,
-                markerShape = MarkerShape.none,
-                borderColor = BorderColor,
-                borderWith = 1
+                Label = this.Label,
+                Color = this.LollipopColor,
+                LineWidth = 10,
+                MarkerShape = MarkerShape.none,
+                BorderColor = this.BorderColor,
+                BorderWith = 1
             };
             return new LegendItem[] { singleItem };
         }

@@ -1,5 +1,6 @@
 ﻿using ScottPlot.Drawing;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 
@@ -9,32 +10,37 @@ namespace ScottPlot.Plottable
     /// This class represents a single radial gauge.
     /// It has level and styling options and can be rendered onto an existing bitmap using any radius.
     /// </summary>
-    internal class RadialGauge
+    internal class RadialGauge : PropertyNotifier
     {
+        private double startAngle;
         /// <summary>
         /// Location of the base of the gauge (degrees)
         /// </summary>
-        public double StartAngle;
+        public double StartAngle { get => startAngle; set { startAngle = value; OnPropertyChanged(); } }
 
+        private double sweepAngle;
         /// <summary>
         /// Current level of this gauge (degrees)
         /// </summary>
-        public double SweepAngle;
+        public double SweepAngle { get => sweepAngle; set { sweepAngle = value; OnPropertyChanged(); } }
 
+        private double maximumSizeAngle;
         /// <summary>
         /// Maximum angular size of the gauge (swept degrees)
         /// </summary>
-        public double MaximumSizeAngle;
+        public double MaximumSizeAngle { get => maximumSizeAngle; set { maximumSizeAngle = value; OnPropertyChanged(); } }
 
+        private double backStartAngle;
         /// <summary>
         /// Angle where the background starts (degrees)
         /// </summary>
-        public double BackStartAngle;
+        public double BackStartAngle { get => backStartAngle; set { backStartAngle = value; OnPropertyChanged(); } }
 
+        private bool clockwise;
         /// <summary>
         /// If true angles end clockwise relative to their base
         /// </summary>
-        public bool Clockwise;
+        public bool Clockwise { get => clockwise; set { clockwise = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Used internally to get the angle swept by the gauge background. It's equal to 360 degrees if CircularBackground is set to true. Also, returns a positive value is the gauge is drawn clockwise and a negative one otherwise
@@ -50,66 +56,100 @@ namespace ScottPlot.Plottable
             private set { BackAngleSweep = value; } // Added for the sweepAngle check in DrawArc due to System.Drawing throwing an OutOfMemoryException.
         }
 
+        private bool circularBackground = true;
         /// <summary>
         /// If true the background will always be drawn as a complete circle regardless of MaximumSizeAngle
         /// </summary>
-        public bool CircularBackground = true;
+        public bool CircularBackground{ get => circularBackground; set { circularBackground = value; OnPropertyChanged(); } }
 
+        private Drawing.Font font;
         /// <summary>
         /// Font used to render values at the tip of the gauge
         /// </summary>
-        public Drawing.Font Font;
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
 
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+        private double fontSizeFraction;
         /// <summary>
         /// Size of the font relative to the line thickness
         /// </summary>
-        public double FontSizeFraction;
+        public double FontSizeFraction { get => fontSizeFraction; set { fontSizeFraction = value; OnPropertyChanged(); } }
 
+        private string label;
         /// <summary>
         /// Text to display on top of the label
         /// </summary>
-        public string Label;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
+        private double labelPositionFraction;
         /// <summary>
         /// Location of the label text along the length of the gauge.
         /// Low values place the label near the base and high values place the label at its tip.
         /// </summary>
-        public double LabelPositionFraction;
+        public double LabelPositionFraction { get => labelPositionFraction; set { labelPositionFraction = value; OnPropertyChanged(); } }
 
+        private double width;
         /// <summary>
         /// Size of the gauge (pixels)
         /// </summary>
-        public double Width;
+        public double Width { get => width; set { width = value; OnPropertyChanged(); } }
 
+        private Color color;
         /// <summary>
         /// Color of the gauge foreground
         /// </summary>
-        public Color Color;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
 
+        private Color backgroundColor;
         /// <summary>
         /// Color of the gauge background
         /// </summary>
-        public Color BackgroundColor;
+        public Color BackgroundColor { get => backgroundColor; set { backgroundColor = value; OnPropertyChanged(); } }
 
+        private System.Drawing.Drawing2D.LineCap startCap = System.Drawing.Drawing2D.LineCap.Round;
         /// <summary>
         /// Style of the base of the gauge
         /// </summary>
-        public System.Drawing.Drawing2D.LineCap StartCap = System.Drawing.Drawing2D.LineCap.Round;
+        public System.Drawing.Drawing2D.LineCap StartCap { get => startCap; set { startCap = value; OnPropertyChanged(); } }
 
+        private System.Drawing.Drawing2D.LineCap endCap = System.Drawing.Drawing2D.LineCap.Round;
         /// <summary>
         /// Style of the tip of the gauge
         /// </summary>
-        public System.Drawing.Drawing2D.LineCap EndCap = System.Drawing.Drawing2D.LineCap.Round;
+        public System.Drawing.Drawing2D.LineCap EndCap { get => endCap; set { endCap = value; OnPropertyChanged(); } }
 
+        private RadialGaugeMode mode;
         /// <summary>
         /// Defines the location of each gauge relative to the start angle and distance from the center
         /// </summary>
-        public RadialGaugeMode Mode;
+        public RadialGaugeMode Mode { get => mode; set { mode = value; OnPropertyChanged(); } }
 
+        private bool showLabels;
         /// <summary>
         /// Indicates whether or not labels will be rendered as text
         /// </summary>
-        public bool ShowLabels;
+        public bool ShowLabels { get => showLabels; set { showLabels = value; OnPropertyChanged(); } }
+
+        public RadialGauge() 
+        {
+            Font = new();
+        }
 
         /// <summary>
         /// Render the gauge onto an existing Bitmap

@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="WPF_Demo.WpfDemos.Views.SignalView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:WPF_Demo.WpfDemos.Views"
+      xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+      xmlns:plottable="clr-namespace:ScottPlot.Plottable;assembly=ScottPlot"
+      xmlns:scottplot="clr-namespace:ScottPlot;assembly=ScottPlot"
+      xmlns:converter="clr-namespace:ScottPlot.Demo.WPF.Converter"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      d:DataContext="{d:DesignInstance Type=plottable:SignalPlot}"
+      mc:Ignorable="d" 
+      d:DesignHeight="60" d:DesignWidth="300"
+      >
+
+    <UserControl.Resources>
+        <converter:ColorConverter x:Key="ColorConverter"/>
+        <ObjectDataProvider x:Key="MarkerShapesList" ObjectType="{x:Type sys:Enum}" MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type  TypeName="scottplot:MarkerShape"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="26" />
+            <RowDefinition Height="26" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="Marker:"/>
+        <ComboBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Source={StaticResource MarkerShapesList}}" SelectedItem="{Binding MarkerShape, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="Color:"/>
+        <xctk:ColorPicker Grid.Column="1" Grid.Row="1" SelectedColor="{Binding Color, Converter={StaticResource ColorConverter}, UpdateSourceTrigger=PropertyChanged}" />
+    </Grid>
+</UserControl>

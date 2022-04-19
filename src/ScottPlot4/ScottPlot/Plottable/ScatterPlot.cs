@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -11,70 +12,98 @@ namespace ScottPlot.Plottable
     /// The scatter plot renders X/Y pairs as points and/or connected lines.
     /// Scatter plots can be extremely slow for large datasets, so use Signal plots in these situations.
     /// </summary>
-    public class ScatterPlot : IPlottable, IHasPoints, IHasLine, IHasMarker, IHighlightable, IHasColor
+    public class ScatterPlot : PropertyNotifier, IPlottable, IHasPoints, IHasLine, IHasMarker, IHighlightable, IHasColor, ISelectable2DSeries
     {
         // data
-        public double[] Xs { get; private set; }
-        public double[] Ys { get; private set; }
-        public double[] XError { get; set; }
-        public double[] YError { get; set; }
+        private double[] xs;
+        public double[] Xs { get => xs; protected set { xs = value; OnPropertyChanged(); } }
+        private double[] ys;
+        public double[] Ys { get => ys; protected set { ys = value; OnPropertyChanged(); OnPropertyChanged(nameof(PointCount)); } }
+        private double[] xError;
+        public double[] XError { get => xError; set { xError = value; OnPropertyChanged(); } }
+        private double[] yError;
+        public double[] YError { get => yError; set { yError = value; OnPropertyChanged(); } }
 
+        private double offsetX = 0;
         /// <summary>
         /// Add this value to each X value before plotting (axis units)
         /// </summary>
-        public double OffsetX { get; set; } = 0;
+        public double OffsetX { get => offsetX; set { offsetX = value; OnPropertyChanged(); } }
 
+        private double offsetY = 0;
         /// <summary>
         /// Add this value to each Y value before plotting (axis units)
         /// </summary>
-        public double OffsetY { get; set; } = 0;
+        public double OffsetY { get => offsetY; set { offsetY = value; OnPropertyChanged(); } }
+
 
         public int PointCount => Ys.Length;
 
         // customization
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public string Label;
-        public Color Color { get => LineColor; set { LineColor = value; MarkerColor = value; } }
-        public Color LineColor { get; set; } = Color.Black;
-        public Color MarkerColor { get; set; } = Color.Black;
-        public LineStyle LineStyle { get; set; } = LineStyle.Solid;
-        public MarkerShape MarkerShape { get; set; } = MarkerShape.filledCircle;
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
-        private double _lineWidth = 1;
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+        public Color Color { get => LineColor; set { LineColor = value; MarkerColor = value; OnPropertyChanged(); } }
+
+        private Color lineColor = Color.Black;
+        public Color LineColor { get => lineColor; set { lineColor = value; OnPropertyChanged(); } }
+        private Color markerColor = Color.Black;
+        public Color MarkerColor { get => markerColor; set { markerColor = value; OnPropertyChanged(); } }
+
+        private LineStyle lineStyle = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
+
+        private MarkerShape markerShape = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
+
+        private double lineWidth = 1;
         public double LineWidth
         {
-            get => IsHighlighted ? _lineWidth * HighlightCoefficient : _lineWidth;
-            set { _lineWidth = value; }
+            get => IsHighlighted ? lineWidth * HighlightCoefficient : lineWidth;
+            set { lineWidth = value; OnPropertyChanged(); }
         }
 
         private double _errorLineWidth = 1;
         public double ErrorLineWidth
         {
             get => IsHighlighted ? _errorLineWidth * HighlightCoefficient : _errorLineWidth;
-            set { _errorLineWidth = value; }
+            set { _errorLineWidth = value; OnPropertyChanged(); }
         }
 
-        public float ErrorCapSize = 3;
+        private float errorCapSize = 3;
+        public float ErrorCapSize { get => errorCapSize; set { errorCapSize = value; OnPropertyChanged(); } }
 
-        public float _markerSize = 5;
+        private float markerSize = 5;
+        /// <summary>
+        /// Size of the marker in pixel units
+        /// </summary>
         public float MarkerSize
         {
-            get => IsHighlighted ? _markerSize * HighlightCoefficient : _markerSize;
-            set { _markerSize = value; }
+            get => IsHighlighted ? markerSize * HighlightCoefficient : markerSize;
+            set { markerSize = value; OnPropertyChanged(); }
         }
-        private float _markerLineWidth = 1;
+
+        private float markerLineWidth = 1;
         public float MarkerLineWidth
         {
-            get => IsHighlighted ? (float)_lineWidth * HighlightCoefficient : _markerLineWidth;
-            set { _markerLineWidth = value; }
+            get => IsHighlighted ? (float)markerLineWidth * HighlightCoefficient : markerLineWidth;
+            set { markerLineWidth = value; OnPropertyChanged(); }
         }
 
-        public bool StepDisplay = false;
+        private bool stepDisplay = false;
+        public bool StepDisplay { get => stepDisplay; set { stepDisplay = value; OnPropertyChanged(); } }
 
-        public bool IsHighlighted { get; set; } = false;
-        public float HighlightCoefficient { get; set; } = 2;
+        private bool isHighlighted = false;
+        public bool IsHighlighted { get => isHighlighted; set { isHighlighted = value; OnPropertyChanged(); } }
+
+        private float highlightCoefficient = 2;
+        public float HighlightCoefficient { get => highlightCoefficient; set { highlightCoefficient = value; OnPropertyChanged(); } }
 
         [Obsolete("Scatter plot arrowheads have been deprecated. Use the Arrow plot type instead.", true)]
         public bool IsArrow { get => ArrowheadWidth > 0 && ArrowheadLength > 0; }
@@ -86,8 +115,35 @@ namespace ScottPlot.Plottable
         public float ArrowheadLength = 0;
 
         // TODO: think about better/additional API ?
-        public int? MinRenderIndex { get; set; }
-        public int? MaxRenderIndex { get; set; }
+        private int? minRenderIndex = null;
+        public int? MinRenderIndex
+        {
+            get => minRenderIndex;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("MinRenderIndex must be positive");
+
+
+                minRenderIndex = value;
+                OnPropertyChanged();
+            }
+        }
+        private int? maxRenderIndex = null;
+        public int? MaxRenderIndex
+        {
+            get => maxRenderIndex;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("MaxRenderIndex must be positive");
+
+                maxRenderIndex = value;
+                OnPropertyChanged();
+            }
+        }
+        
+
 
         public ScatterPlot(double[] xs, double[] ys, double[] errorX = null, double[] errorY = null)
         {
@@ -322,12 +378,12 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = LineColor,
-                lineStyle = LineStyle,
-                lineWidth = LineWidth,
-                markerShape = MarkerShape,
-                markerSize = MarkerSize,
+                Label = this.Label,
+                Color = this.LineColor,
+                LineStyle = this.LineStyle,
+                LineWidth = this.LineWidth,
+                MarkerShape = this.MarkerShape,
+                MarkerSize = this.MarkerSize,
             };
             return new LegendItem[] { singleLegendItem };
         }
@@ -410,6 +466,20 @@ namespace ScottPlot.Plottable
             }
 
             return (Xs[minIndex], Ys[minIndex], minIndex);
+        }
+
+        public bool IsUnderMouse(double coordinateX, double coordinateY, double snapX, double snapY)
+        {
+            bool test = false;
+            for (int i = 0; i < PointCount; i++)
+            {
+                test = Math.Abs(Ys[i] - coordinateY) <= snapY && Math.Abs(Xs[i] - coordinateX) <= snapX;
+                if (test)
+                {
+                    return test;
+                }
+            }
+            return test;
         }
     }
 }

@@ -118,7 +118,11 @@ namespace ScottPlot
 
         #region render lock
 
-        private bool IsRendering = false; // Becomes true only while the render loop is running and not locked
+       
+        private bool isRendering = false; // Becomes true only while the render loop is running and not locked
+        public bool IsRendering { get => isRendering; private set { isRendering = value; } }
+
+
         private bool IsRenderLocked = false; // RenderBitmap() will hang infinitely while this is true
 
         /// <summary>

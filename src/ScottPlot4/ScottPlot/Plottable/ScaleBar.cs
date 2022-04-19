@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using ScottPlot.Drawing;
 using ScottPlot.Styles;
@@ -8,36 +9,73 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// An L-shaped scalebar rendered in the corner of the data area
     /// </summary>
-    public class ScaleBar : IPlottable, IStylable, IHasColor
+    public class ScaleBar : PropertyNotifier, IPlottable, IStylable, IHasColor
     {
+        private double width;
         /// <summary>
         /// Width of the scalebar in cooridinate units
         /// </summary>
-        public double Width;
+        public double Width { get => width; set { width = value; OnPropertyChanged(); } }
 
+        private double height;
         /// <summary>
         /// Height of the scalebar in cooridinate units
         /// </summary>
-        public double Height;
+        public double Height { get => height; set { height = value; OnPropertyChanged(); } }
 
+        private float padding = 10;
         /// <summary>
         /// Distance in pixels from the edge of the data area
         /// </summary>
-        public float Padding = 10;
+        public float Padding { get => padding; set { padding = value; OnPropertyChanged(); } }
 
-        public string HorizontalLabel;
-        public string VerticalLabel;
-        public float LineWidth = 2;
-        public Color LineColor = Color.Black;
-        public readonly Drawing.Font Font = new Drawing.Font();
-        public float FontSize { set => Font.Size = value; }
-        public Color FontColor { set => Font.Color = value; }
-        public bool FontBold { set => Font.Bold = value; }
-        public Color Color { get => LineColor; set { LineColor = value; FontColor = value; } }
+        private string horizontalLabel;
+        public string HorizontalLabel { get => horizontalLabel; set { horizontalLabel = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private string verticalLabel;
+        public string VerticalLabel { get => verticalLabel; set { verticalLabel = value; OnPropertyChanged(); } }
+
+        private float lineWidth = 2;
+        public float LineWidth { get => lineWidth; set { lineWidth = value; OnPropertyChanged(); } }
+
+        private Color lineColor = Color.Black;
+        public Color LineColor { get => lineColor; set { lineColor = value; OnPropertyChanged(); } }
+
+        private Drawing.Font font;
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+
+        public float FontSize { get => Font.Size; set { Font.Size = value; OnPropertyChanged(); OnPropertyChanged(nameof(Font)); } }
+        public Color FontColor { get => Font.Color; set { Font.Color = value; OnPropertyChanged(); OnPropertyChanged(nameof(Font)); } }
+        public bool FontBold { get => Font.Bold; set { Font.Bold = value; OnPropertyChanged(); OnPropertyChanged(nameof(Font)); } }
+
+        public Color Color { get => LineColor; set { LineColor = value; FontColor = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        public ScaleBar() { Font = new(); }
 
         public override string ToString() => $"PlottableScaleBar ({HorizontalLabel}={Width}, {VerticalLabel}={Height})";
         public AxisLimits GetAxisLimits() => new AxisLimits(double.NaN, double.NaN, double.NaN, double.NaN);

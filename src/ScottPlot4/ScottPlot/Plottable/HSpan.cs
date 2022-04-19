@@ -11,9 +11,16 @@ namespace ScottPlot.Plottable
     /// </summary>
     public class HSpan : AxisSpan
     {
-        public double X1 { get => Position1; set => Position1 = value; }
-        public double X2 { get => Position2; set => Position2 = value; }
-        public HSpan() : base(true) { }
+        public double X1 { get => Start; set { Start = value; OnPropertyChanged(); } }
+        public double X2 { get => End; set { End = value; OnPropertyChanged(); } }
+        public HSpan() : base(true) { base.Dragged += HSpan_Dragged; }
+
+        private void HSpan_Dragged(object sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(X1));
+            OnPropertyChanged(nameof(X2));
+        }
+
         public override string ToString() => $"Horizontal span between Y1={X1} and Y2={X2}";
     }
 }

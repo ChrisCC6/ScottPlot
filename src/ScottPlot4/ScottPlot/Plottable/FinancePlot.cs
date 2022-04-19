@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using ScottPlot.Drawing;
@@ -9,9 +11,9 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// Finance plots display open/high/low/close (OHLC) data
     /// </summary>
-    public class FinancePlot : IPlottable
+    public class FinancePlot : PropertyNotifier, IPlottable
     {
-        public readonly List<OHLC> OHLCs = new List<OHLC>();
+        public readonly ObservableCollection<OHLC> OHLCs = new ObservableCollection<OHLC>();
 
         /// <summary>
         /// Returns the last element of OHLCs so users can modify FinancePlots in real time.
@@ -54,13 +56,27 @@ namespace ScottPlot.Plottable
         /// Create an empty finance plot. 
         /// Call Add() and AddRange() to add data.
         /// </summary>
-        public FinancePlot() { }
+        public FinancePlot()
+        { 
+            OHLCs = new ObservableCollection<OHLC>();
+            OHLCs.CollectionChanged += OHLCs_CollectionChanged;
+        }
 
         /// <summary>
         /// Create a finance plot from existing OHLC data.
         /// </summary>
         /// <param name="ohlcs"></param>
-        public FinancePlot(OHLC[] ohlcs) => AddRange(ohlcs);
+        public FinancePlot(OHLC[] ohlcs)
+        {
+            OHLCs = new ObservableCollection<OHLC>();
+            OHLCs.CollectionChanged += OHLCs_CollectionChanged;
+            AddRange(ohlcs);
+        }
+
+        private void OHLCs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(OHLCs));
+        }
 
         /// <summary>
         /// Add a single candle representing a defined time span
@@ -108,7 +124,8 @@ namespace ScottPlot.Plottable
                 if (ohlc is null)
                     throw new ArgumentNullException("no OHLCs may be null");
 
-            OHLCs.AddRange(ohlcs);
+            foreach (var ohlc in ohlcs)
+                OHLCs.Add(ohlc);
         }
 
         /// <summary>

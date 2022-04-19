@@ -1,5 +1,6 @@
 ﻿using ScottPlot.Drawing;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace ScottPlot.Plottable
@@ -7,38 +8,75 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// Text placed at a location relative to the data area that does not move when the axis limits change
     /// </summary>
-    public class Annotation : IPlottable
+    public class Annotation : PropertyNotifier, IPlottable
     {
+        private double x;
         /// <summary>
         /// Horizontal location (in pixel units) relative to the data area
         /// </summary>
-        public double X;
+        public double X { get => x; set { x = value; OnPropertyChanged(); } }
 
+        private double y;
         /// <summary>
         /// Vertical position (in pixel units) relative to the data area
         /// </summary>
-        public double Y;
+        public double Y { get => y; set { y = value; OnPropertyChanged(); } }
 
+        private string label;
         /// <summary>
         /// Text displayed in the annotation
         /// </summary>
-        public string Label;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
-        public readonly Drawing.Font Font = new Drawing.Font();
+        private Drawing.Font font;
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
 
-        public bool Background = true;
-        public Color BackgroundColor = Color.Yellow;
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
 
-        public bool Shadow = true;
-        public Color ShadowColor = Color.FromArgb(25, Color.Black);
+        private bool background = true;
+        public bool Background { get => background; set { background = value; OnPropertyChanged(); } }
 
-        public bool Border = true;
-        public float BorderWidth = 1;
-        public Color BorderColor = Color.Black;
+        private Color backgroundColor = Color.Yellow;
+        public Color BackgroundColor { get => backgroundColor; set { backgroundColor = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private bool shadow = true;
+        public bool Shadow { get => shadow; set { shadow = value; OnPropertyChanged(); } }
+        private Color shadowColor = Color.FromArgb(25, Color.Black);
+        public Color ShadowColor { get => shadowColor; set { shadowColor = value; OnPropertyChanged(); } }
+
+        private bool border = true;
+        public bool Border { get => border; set { border = value; OnPropertyChanged(); } }
+        private float borderWidth = 1;
+        public float BorderWidth { get => borderWidth; set { borderWidth = value; OnPropertyChanged(); } }
+        private Color borderColor = Color.Black;
+        public Color BorderColor { get => borderColor; set { borderColor = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        public Annotation()
+        {
+            Font = new();
+        }
 
         public override string ToString() => $"PlottableAnnotation at ({X} px, {Y} px)";
         public LegendItem[] GetLegendItems() => null;

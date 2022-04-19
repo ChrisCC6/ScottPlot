@@ -56,7 +56,7 @@ namespace ScottPlot.Renderable
         }
     }
 
-    public class Message : IRenderable
+    public class Message : PropertyNotifier, IRenderable
     {
         public string Text;
 

@@ -1,0 +1,71 @@
+﻿<Window x:Class="ScottPlot.Demo.WPF.WpfDemos.MVVMTest"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScottPlot.Demo.WPF.WpfDemos"
+        xmlns:converter="clr-namespace:ScottPlot.Demo.WPF.Converter"
+        xmlns:ScottPlot="clr-namespace:ScottPlot;assembly=ScottPlot.WPF"
+        xmlns:Plottable="clr-namespace:ScottPlot.Plottable;assembly=ScottPlot"
+        xmlns:Renderable="clr-namespace:ScottPlot.Renderable;assembly=ScottPlot"
+        xmlns:views="clr-namespace:WPF_Demo.WpfDemos.Views"        
+        d:DataContext="{d:DesignInstance Type=local:MVVMTest}"
+        mc:Ignorable="d"
+        Title="MVVM" Height="450" Width="1000">
+    <Window.Resources>
+        <converter:PlottableToStringConverter x:Key="PlottableToStringConverter"/>
+        <converter:AxisToStringConverter x:Key="AxisToStringConverter"/>
+        <converter:SelectedObjectToAxisConverter x:Key="SelectedObjectToAxisConverter"/>
+        <converter:SelectedObjectToPlottableConverter x:Key="SelectedObjectToPlottableConverter"/>
+        <DataTemplate DataType="{x:Type Plottable:SignalPlotXY}">
+            <views:SignalView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type Plottable:ScatterPlot}">
+            <views:ScatterView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type Plottable:HLine}">
+            <views:HLineView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type Plottable:VLine}">
+            <views:VLineView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type Plottable:HSpan}">
+            <views:HSpanView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type Plottable:VSpan}">
+            <views:VSpanView />
+        </DataTemplate>
+    </Window.Resources>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="120">
+            <StackPanel Margin="0, 0, 20, 0">
+                <ComboBox ItemsSource="{Binding PlotStyles}" SelectedItem="{Binding SelectedPlotStyle}" Width="100" Margin="5"/>
+            </StackPanel>
+            <StackPanel Margin="0, 0, 20, 0">
+                <ComboBox ItemsSource="{Binding Plottables}" SelectedItem="{Binding SelectedObject,Converter={StaticResource SelectedObjectToPlottableConverter}}" Width="100" Margin="5">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type Plottable:IPlottable}">
+                            <TextBlock Text="{Binding Converter={StaticResource PlottableToStringConverter},UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                
+            </StackPanel>
+            <StackPanel Margin="0, 0, 20, 0">
+                <ComboBox ItemsSource="{Binding Axes}" SelectedItem="{Binding SelectedObject,Converter={StaticResource SelectedObjectToAxisConverter}}" Width="100" Margin="5">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type Renderable:Axis}">
+                            <TextBlock Text="{Binding Converter={StaticResource AxisToStringConverter},UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ContentControl Content="{Binding SelectedObject}"/>
+            </StackPanel>
+        </StackPanel>
+        <ScottPlot:WpfPlot Name="wpfPlot1" 
+                           PlottablesSource="{Binding Plottables}"
+                           SelectedObject="{Binding SelectedObject, UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" 
+                           AxisSource="{Binding Axes}"
+                           PlotStyle="{Binding SelectedPlotStyle}"/>
+    </DockPanel>
+</Window>

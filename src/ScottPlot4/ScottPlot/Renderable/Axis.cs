@@ -14,6 +14,7 @@
 using ScottPlot.Drawing;
 using ScottPlot.Ticks;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace ScottPlot.Renderable
@@ -22,19 +23,33 @@ namespace ScottPlot.Renderable
     /// An Axis stores dimensions (axis limits and pixel/unit conversion methods) and can render
     /// itself including axis label, tick marks, tick labels, and grid lines
     /// </summary>
-    public class Axis : IRenderable
+    public class Axis : PropertyNotifier, IRenderable
     {
+        private RectangleF axisRectangle = new RectangleF();
+
+        private AxisDimensions dims;
         /// <summary>
         /// Axis dimensions and methods for pixel/unit conversions
         /// </summary>
-        public readonly AxisDimensions Dims = new AxisDimensions();
+        public AxisDimensions Dims
+        { 
+            get => dims;
+            private set 
+            {
+                dims = value;
+                OnPropertyChanged();
+            } 
+        }
 
+        private int axisIndex = 0;
         /// <summary>
         /// Plottables with this axis index will use pixel/unit conversions from this axis
         /// </summary>
-        public int AxisIndex = 0;
+        public int AxisIndex { get => axisIndex; set { axisIndex = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); OnPropertyChanged(nameof(Size)); } }
 
         private Edge _Edge;
         public Edge Edge
@@ -49,15 +64,71 @@ namespace ScottPlot.Renderable
                 bool isVertical = (value == Edge.Left || value == Edge.Right);
                 AxisTicks.TickCollection.Orientation = isVertical ? AxisOrientation.Vertical : AxisOrientation.Horizontal;
                 Dims.IsInverted = isVertical;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsHorizontal));
+                OnPropertyChanged(nameof(IsVertical));
             }
         }
         public bool IsHorizontal => Edge == Edge.Top || Edge == Edge.Bottom;
         public bool IsVertical => Edge == Edge.Left || Edge == Edge.Right;
 
-        // private renderable components
-        private readonly AxisLabel AxisLabel = new AxisLabel();
-        private readonly AxisTicks AxisTicks = new AxisTicks();
-        private readonly AxisLine AxisLine = new AxisLine();
+        // child renderable components
+        // readable public properties for MVVM-support
+        private AxisLabel axisLabel;
+        public AxisLabel AxisLabel 
+        { 
+            get => axisLabel;
+            private set
+            {
+                if (axisLabel != null)
+                    axisLabel.PropertyChanged -= Internal_PropertyChanged;
+                axisLabel = value;
+                if (axisLabel != null)
+                    axisLabel.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        private AxisTicks axisTicks;
+        public AxisTicks AxisTicks 
+        { 
+            get => axisTicks;
+            private set
+            {
+                if (axisTicks != null)
+                    axisTicks.PropertyChanged -= Internal_PropertyChanged;
+                axisTicks = value;
+                if (axisTicks != null)
+                    axisTicks.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        private AxisLine axisLine;
+        public AxisLine AxisLine 
+        { 
+            get => axisLine;
+            private set
+            {
+                if (axisLine != null)
+                    axisLine.PropertyChanged -= Internal_PropertyChanged;
+                axisLine = value;
+                if (axisLine != null)
+                    axisLine.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+        public Axis() 
+        {
+            Dims = new AxisDimensions();
+            AxisLabel = new AxisLabel();
+            AxisTicks = new AxisTicks();
+            AxisLine = new AxisLine();
+        }
 
         /// <summary>
         /// Return configuration objects to allow deep customization of axis settings.
@@ -101,10 +172,48 @@ namespace ScottPlot.Renderable
         /// </summary>
         public void SetSizeLimit(float px) => SetSizeLimit(px, px, 0);
 
+        
+        /// <summary>
+        /// how large this axis is PixelSize + PixelSizePadding
+        /// </summary>
+        public float Size 
+        { 
+            get 
+            {
+                if (IsVisible == false || Collapsed)
+                    return 0;
+                else
+                    return PixelSize + PixelSizePadding;
+            }  
+        }
         // private styling variables
-        private float PixelSize; // how large this axis is
-        public float PixelOffset { get; private set; } // distance from the data area
-        private bool Collapsed = false; // true if axes are hidden
+        private float pixelSize;
+        /// <summary>
+        /// how large this axis is
+        /// </summary>
+        public float PixelSize {
+            get => pixelSize;
+            private set {
+                if (pixelSize != value)
+                {
+                    pixelSize = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(Size));
+                }
+            } 
+        }
+
+        private float pixelOffset;
+        /// <summary>
+        /// distance from the data area
+        /// </summary>
+        public float PixelOffset { get => pixelOffset; set { pixelOffset = value; OnPropertyChanged(); } }
+
+        private bool collapsed = false;
+        /// <summary>
+        /// true if axes are hidden
+        /// </summary>
+        public bool Collapsed { get => collapsed; private set { collapsed = value; OnPropertyChanged(); OnPropertyChanged(nameof(Size)); } }
 
         private float PixelSizeMinimum = 5; // also defined in ResetLayout()
         private float PixelSizeMaximum = float.PositiveInfinity; // also defined in ResetLayout()
@@ -114,7 +223,7 @@ namespace ScottPlot.Renderable
         /// Define how many pixels away from the data area this axis will be.
         /// TightenLayout() populates this value (based on other PixelSize values) to stack axes beside each other.
         /// </summary>
-        public void SetOffset(float pixels) => PixelOffset = pixels;
+        public void SetOffset(float pixels) => pixelOffset = pixels;
 
         /// <summary>
         /// Returns the number of pixels occupied by this axis
@@ -149,8 +258,33 @@ namespace ScottPlot.Renderable
             AxisLabel.PixelSize = PixelSize;
             AxisLine.PixelOffset = PixelOffset;
 
+            float left = dims.DataOffsetX;
+            float right = dims.DataOffsetX + dims.DataWidth;
+            float top = dims.DataOffsetY;
+            float bottom = dims.DataOffsetY + dims.DataHeight;
+            float size = GetSize();
+
             using (var gfx = GDI.Graphics(bmp, dims, lowQuality, false))
             {
+                if (Edge == Edge.Bottom)
+                {
+                    axisRectangle = new RectangleF(left, bottom + PixelOffset, right - left, GetSize());
+                }
+                else if (Edge == Edge.Left)
+                {
+                    axisRectangle = new RectangleF(left - PixelOffset- size, top, size, bottom - top);
+                }
+                else if (Edge == Edge.Right)
+                {
+                    axisRectangle = new RectangleF(right + PixelOffset, top, size, bottom - top);
+                }
+                else if (Edge == Edge.Top)
+                {
+                    axisRectangle = new RectangleF(left, top - PixelOffset- size, right - left, size);
+                }
+                else
+                    throw new NotImplementedException();
+
                 AxisTicks.Render(dims, bmp, lowQuality);
                 AxisLabel.Render(dims, bmp, lowQuality);
                 AxisLine.Render(dims, bmp, AxisTicks.SnapPx || lowQuality);
@@ -506,13 +640,15 @@ namespace ScottPlot.Renderable
                 return;
             }
 
+            float pixelSize = 0;
+
             using (var tickFont = GDI.Font(AxisTicks.TickLabelFont))
             using (var titleFont = GDI.Font(AxisLabel.Font))
             {
-                PixelSize = 0;
+                
 
                 if (AxisLabel.IsVisible)
-                    PixelSize += AxisLabel.Measure().Height;
+                    pixelSize += AxisLabel.Measure().Height;
 
                 if (AxisTicks.TickLabelVisible)
                 {
@@ -529,15 +665,17 @@ namespace ScottPlot.Renderable
                     double rotatedSize = shorterEdgeLength + differenceInEdgeLengths * fraction;
 
                     // add the rotated label size to the size of this axis
-                    PixelSize += (float)rotatedSize;
+                    pixelSize += (float)rotatedSize;
                 }
 
                 if (AxisTicks.MajorTickVisible)
-                    PixelSize += AxisTicks.MajorTickLength;
+                    pixelSize += AxisTicks.MajorTickLength;
 
-                PixelSize = Math.Max(PixelSize, PixelSizeMinimum);
-                PixelSize = Math.Min(PixelSize, PixelSizeMaximum);
-                PixelSize += PixelSizePadding;
+                pixelSize = Math.Max(pixelSize, PixelSizeMinimum);
+                pixelSize = Math.Min(pixelSize, PixelSizeMaximum);
+                pixelSize += PixelSizePadding;
+
+                PixelSize = pixelSize;
             }
         }
 
@@ -556,5 +694,12 @@ namespace ScottPlot.Renderable
         {
             return AxisTicks.TickCollection.GetTicks();
         }
+
+        public bool IsUnderMouse(float x, float y)
+        {
+            return axisRectangle.Contains(x, y);
+        }
+
+
     }
 }

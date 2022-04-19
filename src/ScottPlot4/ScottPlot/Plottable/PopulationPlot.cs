@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using ScottPlot.Drawing;
@@ -13,7 +14,7 @@ namespace ScottPlot.Plottable
     /// Public methods, fields, and properties allow extensive customization.
     /// This plottable supports higher-order grouping (groups of groups).
     /// </summary>
-    public class PopulationPlot : IPlottable
+    public class PopulationPlot : PropertyNotifier, IPlottable
     {
         public readonly PopulationMultiSeries MultiSeries;
         public int GroupCount { get { return MultiSeries.groupCount; } }
@@ -78,7 +79,7 @@ namespace ScottPlot.Plottable
         }
 
         public LegendItem[] GetLegendItems() => MultiSeries.multiSeries
-                .Select(x => new LegendItem(this) { label = x.seriesLabel, color = x.color, lineWidth = 10 })
+                .Select(x => new LegendItem(this) { Label = x.seriesLabel, Color = x.color, LineWidth = 10 })
                 .ToArray();
 
         public AxisLimits GetAxisLimits()

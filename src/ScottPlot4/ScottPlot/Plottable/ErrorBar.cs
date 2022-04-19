@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -8,27 +9,45 @@ using System.Threading.Tasks;
 
 namespace ScottPlot.Plottable
 {
-    public class ErrorBar : IPlottable, IHasLine, IHasMarker, IHasColor
+    public class ErrorBar : PropertyNotifier, IPlottable, IHasLine, IHasMarker, IHasColor
     {
-        public double[] Xs { get; set; }
-        public double[] Ys { get; set; }
-        public double[] XErrorsPositive { get; set; }
-        public double[] XErrorsNegative { get; set; }
-        public double[] YErrorsPositive { get; set; }
-        public double[] YErrorsNegative { get; set; }
-        public int CapSize { get; set; } = 3;
+        private double[] xs;
+        public double[] Xs { get => xs; set { xs = value; OnPropertyChanged(); } }
+        private double[] ys;
+        public double[] Ys { get => ys; set { ys = value; OnPropertyChanged(); } }
+        private double[] xErrorsPositive;
+        public double[] XErrorsPositive { get => xErrorsPositive; set { xErrorsPositive = value; OnPropertyChanged(); } }
+        private double[] xErrorsNegative;
+        public double[] XErrorsNegative { get => xErrorsNegative; set { xErrorsNegative = value; OnPropertyChanged(); } }
+        private double[] yErrorsPositive;
+        public double[] YErrorsPositive { get => yErrorsPositive; set { yErrorsPositive = value; OnPropertyChanged(); } }
+        private double[] yErrorsNegative;
+        public double[] YErrorsNegative { get => yErrorsNegative; set { yErrorsNegative = value; OnPropertyChanged(); } }
+        private int capSize = 3;
+        public int CapSize { get => capSize; set { capSize = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public double LineWidth { get; set; } = 1;
-        public Color Color { get; set; } = Color.Gray;
-        public Color LineColor { get => Color; set { Color = value; } }
-        public LineStyle LineStyle { get; set; } = LineStyle.Solid;
-        public MarkerShape MarkerShape { get; set; } = MarkerShape.filledCircle;
-        public float MarkerLineWidth { get; set; } = 1;
-        public float MarkerSize { get; set; } = 0;
-        public Color MarkerColor { get => Color; set { Color = value; } }
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private double lineWidth = 1;
+        public double LineWidth { get => lineWidth; set { lineWidth = value; OnPropertyChanged(); } }
+        private Color color = Color.Gray;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+        public Color LineColor { get => Color; set { Color = value; OnPropertyChanged(); } }
+        private LineStyle lineStyle = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
+        private MarkerShape markerShape = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
+        private float markerLineWidth = 1;
+        public float MarkerLineWidth { get => markerLineWidth; set { markerLineWidth = value; OnPropertyChanged(); } }
+        private float markerSize = 0;
+        public float MarkerSize { get => markerSize; set { markerSize = value; OnPropertyChanged(); } }
+        public Color MarkerColor { get => Color; set { Color = value; OnPropertyChanged(); } }
 
         public ErrorBar(double[] xs, double[] ys, double[] xErrorsPositive, double[] xErrorsNegative, double[] yErrorsPositive, double[] yErrorsNegative)
         {

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Drawing;
 using System.Diagnostics;
 using ScottPlot.Drawing;
+using System.ComponentModel;
 
 namespace ScottPlot.Plottable
 {
@@ -11,35 +12,41 @@ namespace ScottPlot.Plottable
     /// </summary>
     public class DraggableMarkerPlot : MarkerPlot, IDraggable, IHasMarker, IHasColor
     {
+        private bool dragEnabled  = true;
         /// <summary>
         /// Indicates whether this marker is draggable in user controls.
         /// </summary>
-        public bool DragEnabled { get; set; } = true;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
 
+        private Cursor dragCursor = Cursor.Hand;
         /// <summary>
         /// Cursor to display while hovering over this marker if dragging is enabled.
         /// </summary>
-        public Cursor DragCursor { get; set; } = Cursor.Hand;
+        public Cursor DragCursor { get => dragCursor; set { dragCursor = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more negative than this position
         /// </summary>
-        public double DragXLimitMin = double.NegativeInfinity;
+        public double DragXLimitMin { get => dragXLimitMin; set { dragXLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more positive than this position
         /// </summary>
-        public double DragXLimitMax = double.PositiveInfinity;
+        public double DragXLimitMax { get => dragXLimitMax; set { dragXLimitMax = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more negative than this position
         /// </summary>
-        public double DragYLimitMin = double.NegativeInfinity;
+        public double DragYLimitMin { get => dragYLimitMin; set { dragYLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more positive than this position
         /// </summary>
-        public double DragYLimitMax = double.PositiveInfinity;
+        public double DragYLimitMax { get => dragYLimitMax; set { dragYLimitMax = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This event is invoked after the marker is dragged
@@ -81,89 +88,117 @@ namespace ScottPlot.Plottable
     /// This plot type displays a marker at a point that can be dragged with the mouse,
     /// but when dragged it "snapps" to specific X/Y coordinates defined by two arrays of values.
     /// </summary>
-    public class DraggableMarkerPlotInVector : IDraggable, IPlottable, IHasMarker
+    public class DraggableMarkerPlotInVector : PropertyNotifier, IDraggable, IPlottable, IHasMarker
     {
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
+        private double[] xs;
         /// <summary>
         /// Horizontal position in coordinate space
         /// </summary>
-        public double[] Xs { get; set; }
+        public double[] Xs { get => xs; set { xs = value; OnPropertyChanged(); OnPropertyChanged(nameof(PointCount)); } }
 
+        private double[] ys;
         /// <summary>
         /// Vertical position in coordinate space
         /// </summary>
-        public double[] Ys { get; set; }
+        public double[] Ys { get => ys; set { ys = value; OnPropertyChanged(); } }
 
         public int PointCount => Xs.Length;
 
-        public int CurrentIndex { get; set; } = 0;
+        private int currentIndex = 0;
+        public int CurrentIndex { get => currentIndex; set { currentIndex = value; OnPropertyChanged(); } }
+
+        private MarkerShape markerShape  = MarkerShape.filledCircle;
         /// <summary>
         /// Marker to draw at this point
         /// </summary>
-        public MarkerShape MarkerShape { get; set; } = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
 
+
+        private float markerSize = 10;
         /// <summary>
         /// Size of the marker in pixel units
         /// </summary>
-        public float MarkerSize { get; set; } = 10;
+        public float MarkerSize
+        {
+            get => markerSize;
+            set { markerSize = value; OnPropertyChanged(); }
+        }
+
+        private Color color = Color.Black;
+        /// <summary>
+        /// Color of the marker to display at this point
+        /// </summary>
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+
 
         /// <summary>
         /// Color of the marker to display at this point
         /// </summary>
-        public Color Color { get; set; } = Color.Black;
-
-        /// <summary>
-        /// Color of the marker to display at this point
-        /// </summary>
-        public Color MarkerColor { get => Color; set { Color = value; } }
-
+        public Color MarkerColor { get => Color; set { Color = value; OnPropertyChanged(); } }
+        
+        private float markerLineWidth = 1;
         /// <summary>
         /// Width of the marker lines in pixel units
         /// </summary>
-        public float MarkerLineWidth { get; set; } = 1;
+        public float MarkerLineWidth
+        {
+            get => markerLineWidth;
+            set { markerLineWidth = value; OnPropertyChanged(); }
+        }
 
+        private string label { get; set; } = string.Empty;
         /// <summary>
         /// Text to appear in the legend (if populated)
-        /// </summary>
-        public string Label { get; set; }
+        /// </summary>        
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
+        private bool dragEnabled = true;
         /// <summary>
         /// Indicates whether this marker on the scatter plot is draggable in user controls.
         /// </summary>
-        public bool DragEnabled { get; set; } = true;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Cursor to display while hovering over this marker on the scatter plot if dragging is enabled.
         /// </summary>
         public Cursor DragCursor => Cursor.Crosshair;
 
+        private double dragXLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the marker on the scatter plot cannot be dragged more negative than this position
         /// </summary>
-        public double DragXLimitMin = double.NegativeInfinity;
+        public double DragXLimitMin { get => dragXLimitMin; set { dragXLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the marker on the scatter plot cannot be dragged more positive than this position
         /// </summary>
-        public double DragXLimitMax = double.PositiveInfinity;
+        public double DragXLimitMax { get => dragXLimitMax; set { dragXLimitMax = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the marker on the scatter plot cannot be dragged more negative than this position
         /// </summary>
-        public double DragYLimitMin = double.NegativeInfinity;
+        public double DragYLimitMin { get => dragYLimitMin; set { dragYLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the marker on the scatter plot cannot be dragged more positive than this position
         /// </summary>
-        public double DragYLimitMax = double.PositiveInfinity;
+        public double DragYLimitMax { get => dragYLimitMax; set { dragYLimitMax = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This event is invoked after the marker on the scatter plot is dragged
         /// </summary>
         public event EventHandler Dragged = delegate { };
+
 
         public AxisLimits GetAxisLimits() => new AxisLimits(Xs.Min(), Xs.Max(), Ys.Min(), Ys.Max());
 
@@ -240,10 +275,10 @@ namespace ScottPlot.Plottable
         {
             var singleItem = new LegendItem(this)
             {
-                label = Label,
-                markerShape = MarkerShape,
-                markerSize = MarkerSize,
-                color = Color,
+                Label = this.Label,
+                MarkerShape = this.MarkerShape,
+                MarkerSize = this.MarkerSize,
+                Color = this.Color,
             };
             return new LegendItem[] { singleItem };
         }

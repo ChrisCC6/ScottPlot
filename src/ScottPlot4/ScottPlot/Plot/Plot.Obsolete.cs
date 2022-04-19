@@ -754,9 +754,9 @@ namespace ScottPlot
                 StepDisplay = false,
                 MarkerShape = markerShape,
                 LineStyle = lineStyle,
-                highlightedShape = highlightedShape,
-                highlightedColor = highlightedColor.Value,
-                highlightedMarkerSize = (float)highlightedMarkerSize.Value
+                HighlightedShape = highlightedShape,
+                HighlightedColor = highlightedColor.Value,
+                HighlightedMarkerSize = (float)highlightedMarkerSize.Value
             };
 
             Add(scatterPlot);

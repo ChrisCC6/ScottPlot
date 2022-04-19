@@ -32,6 +32,7 @@ namespace ScottPlot.Plottable
                         throw new ArgumentException("Xs must only contain ascending values");
 
                 _Xs = value;
+                OnPropertyChanged();
             }
         }
 
@@ -44,6 +45,7 @@ namespace ScottPlot.Plottable
                     throw new ArgumentException("YS must have at least one element");
 
                 base.Ys = value;
+                OnPropertyChanged();
             }
         }
 

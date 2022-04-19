@@ -1,48 +1,76 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 
 namespace ScottPlot.Plottable
 {
-    public class MarkerPlot : IPlottable, IHasMarker, IHasColor
+    public class MarkerPlot : PropertyNotifier, IPlottable, IHasMarker, IHasColor
     {
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
 
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private double x;
         /// <summary>
         /// Horizontal position in coordinate space
         /// </summary>
-        public double X { get; set; }
+        public double X { get => x; set { x = value; OnPropertyChanged(); } }
 
+        private double y;
         /// <summary>
         /// Vertical position in coordinate space
         /// </summary>
-        public double Y { get; set; }
+        public double Y { get => y; set { y = value; OnPropertyChanged(); } }
 
+        private MarkerShape markerShape = MarkerShape.filledCircle;
         /// <summary>
         /// Marker to draw at this point
         /// </summary>
-        public MarkerShape MarkerShape { get; set; } = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
 
+        private float markerSize = 10;
         /// <summary>
         /// Size of the marker in pixel units
         /// </summary>
-        public float MarkerSize { get; set; } = 10;
+        public float MarkerSize
+        {
+            get => IsHighlighted ? markerSize * HighlightCoefficient : markerSize;
+            set { markerSize = value; OnPropertyChanged(); }
+        }
 
+        private bool isHighlighted { get; set; } = false;
+        public bool IsHighlighted { get => isHighlighted; set { isHighlighted = value; OnPropertyChanged(); } }
+
+        private float highlightCoefficient { get; set; } = 2;
+        public float HighlightCoefficient { get => highlightCoefficient; set { highlightCoefficient = value; OnPropertyChanged(); } }
+
+        private float markerLineWidth = 1;
         /// <summary>
         /// Thickness of the marker lines in pixel units
         /// </summary>
-        public float MarkerLineWidth { get; set; } = 1;
+        public float MarkerLineWidth
+        {
+            get => IsHighlighted ? (float)markerLineWidth * HighlightCoefficient : markerLineWidth;
+            set { markerLineWidth = value; OnPropertyChanged(); }
+        }
 
+        private Color color;
         /// <summary>
         /// Color of the marker to display at this point
         /// </summary>
-        public Color Color { get; set; }
-        public Color MarkerColor { get => Color; set { Color = value; } }
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
 
+        public Color MarkerColor { get => Color; set { Color = value; OnPropertyChanged(); } }
+
+        private string label = string.Empty;
         /// <summary>
         /// Text to appear in the legend (if populated)
         /// </summary>
-        public string Label { get; set; }
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Text to appear on the graph at the point
@@ -61,10 +89,10 @@ namespace ScottPlot.Plottable
         {
             LegendItem item = new(this)
             {
-                label = Label,
-                markerShape = MarkerShape,
-                markerSize = MarkerSize,
-                color = Color
+                Label = this.Label,
+                MarkerShape = this.MarkerShape,
+                MarkerSize = this.MarkerSize,
+                Color = this.Color
             };
 
             return new LegendItem[] { item };

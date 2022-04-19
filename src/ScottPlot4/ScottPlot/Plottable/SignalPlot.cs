@@ -19,5 +19,6 @@ namespace ScottPlot.Plottable
             string label = string.IsNullOrWhiteSpace(this.Label) ? "" : $" ({this.Label})";
             return $"PlottableSignal{label} with {PointCount} points";
         }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ScottPlot.Drawing;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -12,7 +13,7 @@ namespace ScottPlot.Plottable
     /// A heatmap displays a 2D array of intensities as small rectangles on the plot
     /// colored according to their intensity value according to a colormap.
     /// </summary>
-    public class Heatmap : IPlottable, IHasColormap
+    public class Heatmap : PropertyNotifier, IPlottable, IHasColormap
     {
         /// <summary>
         /// Minimum heatmap value
@@ -39,25 +40,29 @@ namespace ScottPlot.Plottable
         /// </summary>
         protected Bitmap BmpHeatmap;
 
+        private double offsetX = 0;
         /// <summary>
         /// Horizontal location of the lower-left cell
         /// </summary>
-        public double OffsetX = 0;
+        public double OffsetX { get => offsetX; set { offsetX = value; OnPropertyChanged(); } }
 
+        private double offsetY = 0;
         /// <summary>
         /// Vertical location of the lower-left cell
         /// </summary>
-        public double OffsetY = 0;
+        public double OffsetY { get => offsetY; set { offsetY = value; OnPropertyChanged(); } }
 
+        private double cellWidth = 1;
         /// <summary>
         /// Width of each cell composing the heatmap
         /// </summary>
-        public double CellWidth = 1;
+        public double CellWidth { get => cellWidth; set { cellWidth = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsDefaultSizeAndLocation)); } }
 
+        private double cellHeight = 1;
         /// <summary>
         /// Width of each cell composing the heatmap
         /// </summary>
-        public double CellHeight = 1;
+        public double CellHeight { get => cellHeight; set { cellHeight = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsDefaultSizeAndLocation)); } }
 
         /// <summary>
         /// Position of the left edge of the heatmap
@@ -65,7 +70,7 @@ namespace ScottPlot.Plottable
         public double XMin
         {
             get => OffsetX;
-            set => OffsetX = value;
+            set { OffsetX = value; OnPropertyChanged(); }
         }
 
         /// <summary>
@@ -74,19 +79,19 @@ namespace ScottPlot.Plottable
         public double XMax
         {
             get => OffsetX + DataWidth * CellWidth;
-            set => CellWidth = (value - OffsetX) / DataWidth;
+            set { CellWidth = (value - OffsetX) / DataWidth; OnPropertyChanged(); OnPropertyChanged(nameof(IsDefaultSizeAndLocation)); }
         }
 
         public double YMin
         {
             get => OffsetY;
-            set => OffsetY = value;
+            set { OffsetY = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsDefaultSizeAndLocation)); }
         }
 
         public double YMax
         {
             get => OffsetY + DataHeight * CellHeight;
-            set => CellHeight = (value - OffsetY) / DataHeight;
+            set { CellHeight = (value - OffsetY) / DataHeight; OnPropertyChanged(); }
         }
 
         /// <summary>
@@ -94,30 +99,34 @@ namespace ScottPlot.Plottable
         /// </summary>
         public bool IsDefaultSizeAndLocation => OffsetX == 0 && OffsetY == 0 && CellHeight == 1 && CellWidth == 1;
 
+        private string label { get; set; } = string.Empty;
         /// <summary>
         /// Text to appear in the legend
         /// </summary>
-        public string Label { get; set; }
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Colormap used to translate heatmap values to colors
         /// </summary>
         public Colormap Colormap { get; private set; } = Colormap.Viridis;
 
+        private double? scaleMin;
         /// <summary>
         /// If defined, colors will be "clipped" to this value such that lower values (lower colors) will not be shown
         /// </summary>
-        public double? ScaleMin { get; set; }
+        public double? ScaleMin { get => scaleMin; set { scaleMin = value; OnPropertyChanged(); OnPropertyChanged(nameof(ColormapMin)); } }
 
+        private double? scaleMax;
         /// <summary>
         /// If defined, colors will be "clipped" to this value such that greater values (higher colors) will not be shown
         /// </summary>
-        public double? ScaleMax { get; set; }
+        public double? ScaleMax { get => scaleMax; set { scaleMax = value; OnPropertyChanged(); OnPropertyChanged(nameof(ColormapMax)); } }
 
+        private double? transparencyThreshold;
         /// <summary>
         /// Heatmap values below this number (if defined) will be made transparent
         /// </summary>
-        public double? TransparencyThreshold { get; set; }
+        public double? TransparencyThreshold { get => transparencyThreshold; set { transparencyThreshold = value; OnPropertyChanged(); } }
 
         [Obsolete("This feature has been deprecated. Use AddImage() to place a bitmap beneath or above the heatmap.", true)]
         public Bitmap BackgroundImage { get; set; }
@@ -128,9 +137,15 @@ namespace ScottPlot.Plottable
         [Obsolete("This feature has been deprecated. Use Plot.AddText() to add text to the plot.", true)]
         public bool ShowAxisLabels;
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Value of the the lower edge of the colormap
@@ -142,15 +157,17 @@ namespace ScottPlot.Plottable
         /// </summary>
         public double ColormapMax => ScaleMax ?? Max;
 
+        private bool colormapMinIsClipped = false;
         /// <summary>
         /// Indicates whether values extend beyond the lower edge of the colormap
         /// </summary>
-        public bool ColormapMinIsClipped { get; private set; } = false;
+        public bool ColormapMinIsClipped { get => colormapMinIsClipped; private set { colormapMinIsClipped = value; OnPropertyChanged(); } }
 
+        private bool colormapMaxIsClipped = false;
         /// <summary>
         /// Indicates whether values extend beyond the upper edge of the colormap
         /// </summary>
-        public bool ColormapMaxIsClipped { get; private set; } = false;
+        public bool ColormapMaxIsClipped { get => colormapMaxIsClipped; private set { colormapMaxIsClipped = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// If true, heatmap squares will be smoothed using high quality bicubic interpolation.
@@ -159,13 +176,14 @@ namespace ScottPlot.Plottable
         public bool Smooth
         {
             get => Interpolation != InterpolationMode.NearestNeighbor;
-            set => Interpolation = value ? InterpolationMode.HighQualityBicubic : InterpolationMode.NearestNeighbor;
+            set { Interpolation = value ? InterpolationMode.HighQualityBicubic : InterpolationMode.NearestNeighbor; OnPropertyChanged(); }
         }
 
+        public InterpolationMode interpolation = InterpolationMode.NearestNeighbor;
         /// <summary>
         /// Controls which interpolation mode is used when zooming into the heatmap.
         /// </summary>
-        public InterpolationMode Interpolation { get; set; } = InterpolationMode.NearestNeighbor;
+        public InterpolationMode Interpolation { get => interpolation; private set { interpolation = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This method analyzes the intensities and colormap to create a bitmap
@@ -233,6 +251,9 @@ namespace ScottPlot.Plottable
             BitmapData bmpData = BmpHeatmap.LockBits(rect, ImageLockMode.ReadWrite, BmpHeatmap.PixelFormat);
             Marshal.Copy(flatARGB, 0, bmpData.Scan0, flatARGB.Length);
             BmpHeatmap.UnlockBits(bmpData);
+
+            OnPropertyChanged(nameof(ColormapMin));
+            OnPropertyChanged(nameof(ColormapMax));
         }
 
 
@@ -295,10 +316,10 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = Color.Gray,
-                lineWidth = 10,
-                markerShape = MarkerShape.none
+                Label = Label,
+                Color = Color.Gray,
+                LineWidth = 10,
+                MarkerShape = MarkerShape.none
             };
             return new LegendItem[] { singleLegendItem };
         }

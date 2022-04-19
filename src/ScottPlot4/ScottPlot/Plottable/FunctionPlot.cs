@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,7 +10,7 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// A function plot displays a curve using a function (Y as a function of X)
     /// </summary>
-    public class FunctionPlot : IPlottable, IHasLine, IHasColor
+    public class FunctionPlot : PropertyNotifier, IPlottable, IHasLine, IHasColor
     {
         /// <summary>
         /// The function to translate an X to a Y (or null if undefined)
@@ -17,14 +18,40 @@ namespace ScottPlot.Plottable
         public Func<double, double?> Function;
 
         // customizations
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public double LineWidth { get; set; } = 1;
-        public LineStyle LineStyle { get; set; } = LineStyle.Solid;
-        public string Label;
-        public Color Color { get; set; } = Color.Black;
-        public Color LineColor { get; set; } = Color.Black;
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private bool isHighlighted { get; set; } = false;
+        public bool IsHighlighted { get => isHighlighted; set { isHighlighted = value; OnPropertyChanged(); } }
+
+        private float highlightCoefficient { get; set; } = 2;
+        public float HighlightCoefficient { get => highlightCoefficient; set { highlightCoefficient = value; OnPropertyChanged(); } }
+
+        private double _lineWidth = 1;
+        public double LineWidth
+        {
+            get => IsHighlighted ? _lineWidth * HighlightCoefficient : _lineWidth;
+            set { _lineWidth = value; OnPropertyChanged(); }
+        }
+
+        private LineStyle lineStyle = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
+
+        private string label { get; set; } = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+
+        private Color color = Color.Black;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+
+        private Color lineColor = Color.Black;
+        public Color LineColor { get => lineColor; set { lineColor = value; OnPropertyChanged(); } }
+
 
         public FunctionPlot(Func<double, double?> function)
         {
@@ -112,11 +139,11 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = Color,
-                lineStyle = LineStyle,
-                lineWidth = LineWidth,
-                markerShape = MarkerShape.none
+                Label = this.Label,
+                Color = this.Color,
+                LineStyle = this.LineStyle,
+                LineWidth = this.LineWidth,
+                MarkerShape = MarkerShape.none
             };
             return new LegendItem[] { singleLegendItem };
         }

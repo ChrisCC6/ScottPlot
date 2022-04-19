@@ -11,7 +11,7 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// Display circles of user-defined sizes and colors at specific X/Y positions
     /// </summary>
-    public class BubblePlot : IPlottable
+    public class BubblePlot : PropertyNotifier, IPlottable
     {
         private struct Bubble
         {
@@ -25,9 +25,12 @@ namespace ScottPlot.Plottable
 
         private readonly List<Bubble> Bubbles = new();
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
         public override string ToString() => $"BubblePlot with {Bubbles.Count} bubbles";
 
         /// <summary>

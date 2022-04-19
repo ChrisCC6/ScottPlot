@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Data;
 using System.Linq;
+using System.ComponentModel;
 
 namespace ScottPlot.Plottable
 {
@@ -13,13 +14,22 @@ namespace ScottPlot.Plottable
     /// </summary>
     public class BarPlot : BarPlotBase, IPlottable, IHasColor
     {
-        public string Label;
-        public Color Color { get => FillColor; set { FillColor = value; } }
-        public Color FillColor = Color.Green;
-        public Color FillColorNegative = Color.Red;
-        public Color FillColorHatch = Color.Blue;
-        public HatchStyle HatchStyle = HatchStyle.None;
-        public float BorderLineWidth = 1;
+        private string label;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+
+        public Color Color { get => FillColor; set { FillColor = value; OnPropertyChanged(); } }
+
+        public Color fillColor = Color.Green;
+        public Color FillColor { get => fillColor; set { fillColor = value; OnPropertyChanged(); } }
+         
+        public Color fillColorNegative = Color.Red;
+        public Color FillColorNegative { get => fillColorNegative; set { fillColorNegative = value; OnPropertyChanged(); } }
+        public Color fillColorHatch = Color.Blue;
+        public Color FillColorHatch { get => fillColorHatch; set { fillColorHatch = value; OnPropertyChanged(); } }
+        public HatchStyle hatchStyle = HatchStyle.None;
+        public HatchStyle HatchStyle { get => hatchStyle; set { hatchStyle = value; OnPropertyChanged(); } }
+        public float borderLineWidth = 1;
+        public float BorderLineWidth { get => borderLineWidth; set { borderLineWidth = value; OnPropertyChanged(); } }
 
         public BarPlot(double[] xs, double[] ys, double[] yErr, double[] yOffsets) : base()
         {
@@ -149,14 +159,14 @@ namespace ScottPlot.Plottable
         {
             var singleItem = new LegendItem(this)
             {
-                label = Label,
-                color = FillColor,
-                lineWidth = 10,
-                markerShape = MarkerShape.none,
-                hatchColor = FillColorHatch,
-                hatchStyle = HatchStyle,
-                borderColor = BorderColor,
-                borderWith = BorderLineWidth
+                Label = this.Label,
+                Color = this.FillColor,
+                LineWidth = 10,
+                MarkerShape = MarkerShape.none,
+                HatchColor = this.FillColorHatch,
+                HatchStyle = this.HatchStyle,
+                BorderColor = this.BorderColor,
+                BorderWith = this.BorderLineWidth
             };
             return new LegendItem[] { singleItem };
         }

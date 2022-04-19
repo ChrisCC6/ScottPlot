@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using ScottPlot.Renderable;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace ScottPlot.Plottable
@@ -9,24 +10,53 @@ namespace ScottPlot.Plottable
     /// A polygon is a collection of X/Y points that are all connected to form a closed shape.
     /// Polygons can be optionally filled with a color or a gradient.
     /// </summary>
-    public class Polygon : IPlottable, IHasColor
+    public class Polygon : PropertyNotifier, IPlottable, IHasColor
     {
         // data
-        public double[] Xs;
-        public double[] Ys;
+        private double[] xs;
+        public double[] Xs { get => xs; set { xs = value; OnPropertyChanged(); } }
+        private double[] ys;
+        public double[] Ys { get => ys; set { ys = value; OnPropertyChanged(); } }
 
         // configuration
-        public string Label;
-        public double LineWidth = 1;
-        public Color LineColor = Color.Black;
-        public bool Fill = true;
-        public Color FillColor = Color.Gray;
-        public Color Color { get => FillColor; set { FillColor = value; } }
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public Color HatchColor = Color.Transparent;
-        public HatchStyle HatchStyle = HatchStyle.None;
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+
+        private double lineWidth = 1;
+        public double LineWidth
+        {
+            get => IsHighlighted ? lineWidth * HighlightCoefficient : lineWidth;
+            set { lineWidth = value; OnPropertyChanged(); }
+        }
+
+        private bool isHighlighted = false;
+        public bool IsHighlighted { get => isHighlighted; set { isHighlighted = value; OnPropertyChanged(); } }
+        private float highlightCoefficient = 2;
+        public float HighlightCoefficient { get => highlightCoefficient; set { highlightCoefficient = value; OnPropertyChanged(); } }
+
+        private Color lineColor = Color.Black;
+        public Color LineColor { get => lineColor; set { lineColor = value; OnPropertyChanged(); } }
+        
+        private bool fill = true;
+        public bool Fill { get => fill; set { fill = value; OnPropertyChanged(); } }
+        private Color fillColor = Color.Gray;
+        public Color FillColor { get => fillColor; set { fillColor = value; OnPropertyChanged(); } }
+        public Color Color { get => FillColor; set { FillColor = value; OnPropertyChanged(); } }
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private Color hatchColor = Color.Transparent;
+        public Color HatchColor { get => hatchColor; set { hatchColor = value; OnPropertyChanged(); } }
+
+        private HatchStyle hatchStyle = HatchStyle.None;
+        public HatchStyle HatchStyle { get => hatchStyle; set { hatchStyle = value; OnPropertyChanged(); } }
 
         public Polygon(double[] xs, double[] ys)
         {
@@ -64,12 +94,12 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = Fill ? FillColor : LineColor,
-                lineWidth = Fill ? 10 : LineWidth,
-                markerShape = MarkerShape.none,
-                hatchColor = HatchColor,
-                hatchStyle = HatchStyle
+                Label = this.Label,
+                Color = Fill ? FillColor : LineColor,
+                LineWidth = Fill ? 10 : LineWidth,
+                MarkerShape = MarkerShape.none,
+                HatchColor = this.HatchColor,
+                HatchStyle = this.HatchStyle
             };
             return new LegendItem[] { singleLegendItem };
         }

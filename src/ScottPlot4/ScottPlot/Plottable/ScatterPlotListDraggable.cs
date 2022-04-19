@@ -9,7 +9,9 @@ namespace ScottPlot.Plottable
     public class ScatterPlotListDraggable : ScatterPlotList<double>, IDraggable
     {
         private int IndexUnderMouse = -1;
-        public bool DragEnabled { get; set; } = true;
+
+        private bool dragEnabled = true;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
 
         public Cursor DragCursor => Cursor.Hand;
 
@@ -23,7 +25,7 @@ namespace ScottPlot.Plottable
                 return;
 
             Coordinate requested = new(coordinateX, coordinateY);
-            Coordinate actual = MovePointFunc(Xs, Ys, IndexUnderMouse, requested);
+            Coordinate actual = MovePointFunc(Xs.ToList(), Ys.ToList(), IndexUnderMouse, requested);
             Xs[IndexUnderMouse] = actual.X;
             Ys[IndexUnderMouse] = actual.Y;
 

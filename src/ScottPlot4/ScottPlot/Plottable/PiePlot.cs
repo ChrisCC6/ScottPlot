@@ -1,5 +1,6 @@
 ﻿using ScottPlot.Drawing;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -10,32 +11,98 @@ namespace ScottPlot.Plottable
     /// A pie plot displays a collection of values as a circle.
     /// Pie plots with a hollow center are donut plots.
     /// </summary>
-    public class PiePlot : IPlottable
+    public class PiePlot : PropertyNotifier, IPlottable
     {
-        public double[] Values;
-        public string Label;
-        public string[] SliceLabels;
+        private double[] _values;
+        /// <summary>
+        /// The data to be plotted
+        /// </summary>
+        public double[] Values { get => _values; set { _values = value; OnPropertyChanged(); } }
 
-        public Color[] SliceFillColors;
-        public Color[] SliceLabelColors;
-        public Color BackgroundColor;
+        private string label;
+        /// <summary>
+        /// Text displayed in the annotation
+        /// </summary>
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
-        public bool Explode;
-        public bool ShowValues;
-        public bool ShowPercentages;
-        public bool ShowLabels;
+        private string[] sliceLabels;
+        /// <summary>
+        /// Labels for each category.
+        /// Length must be equal to the number of columns (categories) in the original data.
+        /// </summary>
+        public string[] SliceLabels { get => sliceLabels; set { sliceLabels = value; OnPropertyChanged(); } }
 
-        public double DonutSize;
-        public string DonutLabel;
-        public readonly Drawing.Font CenterFont = new Drawing.Font();
-        public readonly Drawing.Font SliceFont = new Drawing.Font();
+        private Color[] sliceFillColors;
+        /// <summary>
+        /// The colors of each slice
+        /// </summary>
+        public Color[] SliceFillColors { get => sliceFillColors; set { sliceFillColors = value; OnPropertyChanged(); } }
 
-        public float OutlineSize = 0;
-        public Color OutlineColor = Color.Black;
+        private Color[] sliceLabelColors;
+        public Color[] SliceLabelColors { get => sliceLabelColors; set { sliceLabelColors = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private Color backgroundColor;
+        public Color BackgroundColor { get => backgroundColor; set { backgroundColor = value; OnPropertyChanged(); } }
+
+
+        private bool explode;
+        public bool Explode { get => explode; set { explode = value; OnPropertyChanged(); } }
+        private bool showValues;
+        public bool ShowValues { get => showValues; set { showValues = value; OnPropertyChanged(); } }
+        private bool showPercentages;
+        public bool ShowPercentages { get => showPercentages; set { showPercentages = value; OnPropertyChanged(); } }
+        private bool showLabels;
+        public bool ShowLabels { get => showLabels; set { showLabels = value; OnPropertyChanged(); } }
+
+        private double donutSize;
+        public double DonutSize { get => donutSize; set { donutSize = value; OnPropertyChanged(); } }
+        private string donutLabel;
+        public string DonutLabel { get => donutLabel; set { donutLabel = value; OnPropertyChanged(); } }
+
+        private Drawing.Font centerFont = new Drawing.Font();
+        private Drawing.Font sliceFont = new Drawing.Font();
+        public Drawing.Font CenterFont
+        {
+            get => centerFont;
+            set
+            {
+                if (centerFont != null)
+                    centerFont.PropertyChanged -= Internal_PropertyChanged;
+                centerFont = value;
+                if (centerFont != null)
+                    centerFont.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        public Drawing.Font SliceFont
+        {
+            get => sliceFont;
+            set
+            {
+                if (sliceFont != null)
+                    sliceFont.PropertyChanged -= Internal_PropertyChanged;
+                sliceFont = value;
+                if (sliceFont != null)
+                    sliceFont.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+        private float outlineSize = 0;
+        public float OutlineSize { get => outlineSize; set { outlineSize = value; OnPropertyChanged(); } }
+        private Color outlineColor = Color.Black;
+        public Color OutlineColor { get => outlineColor; set { outlineColor = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
         public PiePlot(double[] values, string[] groupNames, Color[] colors)
         {
@@ -64,7 +131,7 @@ namespace ScottPlot.Plottable
 
             return Enumerable
                 .Range(0, Values.Length)
-                .Select(i => new LegendItem(this) { label = SliceLabels[i], color = SliceFillColors[i], lineWidth = 10 })
+                .Select(i => new LegendItem(this) { Label = SliceLabels[i], Color = SliceFillColors[i], LineWidth = 10 })
                 .ToArray();
         }
 

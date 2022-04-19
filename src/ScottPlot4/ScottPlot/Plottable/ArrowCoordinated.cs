@@ -10,7 +10,7 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// An arrow with X/Y coordinates for the base and the tip
     /// </summary>
-    public class ArrowCoordinated : IPlottable, IHasPixelOffset, IHasLine, IHasColor
+    public class ArrowCoordinated : PropertyNotifier, IPlottable, IHasPixelOffset, IHasLine, IHasColor
     {
         /// <summary>
         /// Location of the arrow base in coordinate space
@@ -22,62 +22,75 @@ namespace ScottPlot.Plottable
         /// </summary>
         public readonly Coordinate Tip = new(0, 0);
 
+        private Color color = Color.Black;
         /// <summary>
         /// Color of the arrow and arrowhead
         /// </summary>
-        public Color Color { get; set; } = Color.Black;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Color of the arrow and arrowhead
         /// </summary>
         public Color LineColor { get => Color; set { Color = value; } }
 
+        private double lineWidth = 2;
         /// <summary>
         /// Thickness of the arrow line
         /// </summary>
-        public double LineWidth { get; set; } = 2;
+        public double LineWidth { get => lineWidth; set { lineWidth = value; OnPropertyChanged(); } }
 
+        private LineStyle lineStyle = LineStyle.Solid;
         /// <summary>
         /// Style of the arrow line
         /// </summary>
-        public LineStyle LineStyle { get; set; } = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
 
+        private string label;
         /// <summary>
         /// Label to appear in the legend
         /// </summary>
-        public string Label;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
+        private double arrowheadWidth = 3;
         /// <summary>
         /// Width of the arrowhead (pixels)
         /// </summary>
-        public double ArrowheadWidth = 3;
+        public double ArrowheadWidth { get => arrowheadWidth; set { arrowheadWidth = value; OnPropertyChanged(); } }
 
+        private double arrowheadLength = 3;
         /// <summary>
         /// Height of the arrowhead (pixels)
         /// </summary>
-        public double ArrowheadLength = 3;
+        public double ArrowheadLength { get => arrowheadLength; set { arrowheadLength = value; OnPropertyChanged(); } }
 
+        private float minimumLengthPixels = 3;
         /// <summary>
         /// The arrow will be lengthened to ensure it is at least this size on the screen
         /// </summary>
-        public float MinimumLengthPixels = 0;
+        public float MinimumLengthPixels { get => minimumLengthPixels; set { minimumLengthPixels = value; OnPropertyChanged(); } }
 
+        private MarkerShape markerShape = MarkerShape.filledCircle;
         /// <summary>
         /// Marker to be drawn at the base (if MarkerSize > 0)
         /// </summary>
-        public MarkerShape MarkerShape = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
 
+        private float markerSize = 0;
         /// <summary>
         /// Size of marker (in pixels) to draw at the base
         /// </summary>
-        public float MarkerSize = 0;
+        public float MarkerSize { get => markerSize; set { markerSize = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public float PixelOffsetX { get; set; } = 0;
-        public float PixelOffsetY { get; set; } = 0;
-
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private float pixelOffsetX { get; set; } = 0;
+        public float PixelOffsetX { get => pixelOffsetX; set { pixelOffsetX = value; OnPropertyChanged(); } }
+        private float pixelOffsetY { get; set; } = 0;
+        public float PixelOffsetY { get => pixelOffsetY; set { pixelOffsetY = value; OnPropertyChanged(); } }
         public ArrowCoordinated(Coordinate arrowBase, Coordinate arrowTip)
         {
             Base.X = arrowBase.X;
@@ -107,7 +120,7 @@ namespace ScottPlot.Plottable
         {
             var item = new LegendItem(this)
             {
-                label = Label
+                Label = Label
             };
             return new LegendItem[] { item };
         }

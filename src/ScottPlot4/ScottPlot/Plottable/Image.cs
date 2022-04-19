@@ -9,47 +9,64 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// Display a Bitmap at X/Y coordinates in unit space
     /// </summary>
-    public class Image : IPlottable
+    public class Image : PropertyNotifier, IPlottable
     {
-        public bool IsVisible { get; set; } = true;
 
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+
+        private double x;
         /// <summary>
         /// Position of the primary corner (based on Alginment)
         /// </summary>
-        public double X;
+        public double X { get => x; set { x = value; OnPropertyChanged(); } }
 
+        private double y;
         /// <summary>
         /// Position of the primary corner (based on Alginment)
         /// </summary>
-        public double Y;
+        public double Y { get => y; set { y = value; OnPropertyChanged(); } }
 
+        private float scale = 1.0f;
         /// <summary>
         /// Multiply the size of the image (in pixel units) by this scale factor.
         /// The primary corner (based on Alginment) will remain anchored.
         /// </summary>
-        public float Scale = 1.0f;
+        public float Scale { get => scale; set { scale = value; OnPropertyChanged(); } }
 
+        private double rotation;
         /// <summary>
         /// Rotate the image clockwise around its primary corner (defined by Alignment) by this number of degrees
         /// </summary>
-        public double Rotation;
+        public double Rotation { get => rotation; set { rotation = value; OnPropertyChanged(); } }
 
+        private System.Drawing.Image bitmap;
         /// <summary>
         /// Image to display
         /// </summary>
-        public System.Drawing.Image Bitmap;
+        public System.Drawing.Image Bitmap { get => bitmap; set { bitmap = value; OnPropertyChanged(); } }
 
+        private Alignment alignment;
         /// <summary>
         /// Indicates which corner of the Bitmap is described by X and Y.
         /// This corner will be the axis of Rotation, and the center of Scale.
         /// </summary>
-        public Alignment Alignment;
+        public Alignment Alignment { get => alignment; set { alignment = value; OnPropertyChanged(); } }
 
-        public Color BorderColor;
-        public float BorderSize;
-        public string Label;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private Color borderColor;
+        public Color BorderColor { get => borderColor; set { borderColor = value; OnPropertyChanged(); } }
+
+        private float borderSize;
+        public float BorderSize { get => borderSize; set { borderSize = value; OnPropertyChanged(); } }
+
+        private string label;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
         public override string ToString() => $"PlottableImage Size(\"{Bitmap.Size}\") at ({X}, {Y})";
         public AxisLimits GetAxisLimits() => new AxisLimits(X, X, Y, Y);

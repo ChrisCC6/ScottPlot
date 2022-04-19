@@ -6,10 +6,13 @@ using System.Text;
 
 namespace ScottPlot.Renderable
 {
-    public class DataBackground : IRenderable
+    public class DataBackground : PropertyNotifier, IRenderable
     {
-        public Color Color { get; set; } = Color.White;
-        public bool IsVisible { get; set; } = true;
+        private Color color = Color.White;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
         public void Render(PlotDimensions dims, Bitmap bmp, bool lowQuality = false)
         {

@@ -1,6 +1,8 @@
-﻿namespace ScottPlot.Plottable
+﻿using System.ComponentModel;
+
+namespace ScottPlot.Plottable
 {
-    public interface IPlottable
+    public interface IPlottable : INotifyPropertyChanged
     {
         bool IsVisible { get; set; }
         void Render(PlotDimensions dims, System.Drawing.Bitmap bmp, bool lowQuality = false);

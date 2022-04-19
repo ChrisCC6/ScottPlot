@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using ScottPlot.Drawing;
@@ -13,7 +14,7 @@ namespace ScottPlot.Plottable
     /// 
     /// Data is managed using 2D arrays where groups (colored shapes) are rows and categories (arms of the web) are columns.
     /// </summary>
-    public class RadarPlot : IPlottable
+    public class RadarPlot : PropertyNotifier, IPlottable
     {
         /// <summary>
         /// Values for every group (rows) and category (columns) normalized from 0 to 1.
@@ -31,6 +32,7 @@ namespace ScottPlot.Plottable
         /// </summary>
         private double[] NormMaxes;
 
+        private string[] categoryLabels;
         /// <summary>
         /// Labels for each category.
         /// Length must be equal to the number of columns (categories) in the original data.
@@ -38,8 +40,9 @@ namespace ScottPlot.Plottable
         /// <remarks>
         /// If showing icons, labels will be ignored.
         /// </remarks>
-        public string[] CategoryLabels;
+        public string[] CategoryLabels { get => categoryLabels; set { categoryLabels = value; OnPropertyChanged(); } }
 
+        private System.Drawing.Image[] categoryImages;
         /// <summary>
         /// Icons for each category.
         /// Length must be equal to the number of columns (categories) in the original data. 
@@ -47,72 +50,106 @@ namespace ScottPlot.Plottable
         /// <remarks>
         /// If showing icons, labels will be ignored.
         /// </remarks>
-        public System.Drawing.Image[] CategoryImages;
+        public System.Drawing.Image[] CategoryImages { get => categoryImages; set { categoryImages = value; OnPropertyChanged(); } }
 
+        private string[] groupLabels;
         /// <summary>
         /// Labels for each group.
         /// Length must be equal to the number of rows (groups) in the original data.
         /// </summary>
-        public string[] GroupLabels;
+        public string[] GroupLabels { get => groupLabels; set { groupLabels = value; OnPropertyChanged(); } }
 
+        private Color[] fillColors;
         /// <summary>
         /// Colors (typically semi-transparent) to shade the inner area of each group.
         /// Length must be equal to the number of rows (groups) in the original data.
         /// </summary>
-        public Color[] FillColors;
+        public Color[] FillColors { get => fillColors; set { fillColors = value; OnPropertyChanged(); } }
 
+        private Color[] lineColors;
         /// <summary>
         /// Colors to outline the shape for each group.
         /// Length must be equal to the number of rows (groups) in the original data.
         /// </summary>
-        public Color[] LineColors;
+        public Color[] LineColors { get => lineColors; set { lineColors = value; OnPropertyChanged(); } }
 
+        private Color webColor = Color.Gray;
         /// <summary>
         /// Color of the axis lines and concentric circles representing ticks
         /// </summary>
-        public Color WebColor = Color.Gray;
+        public Color WebColor { get => webColor; set { webColor = value; OnPropertyChanged(); } }
 
+        private bool independentAxes;
         /// <summary>
         /// Controls if values along each category axis are scaled independently or uniformly across all axes.
         /// </summary>
-        public bool IndependentAxes;
+        public bool IndependentAxes { get => independentAxes; set { independentAxes = value; OnPropertyChanged(); } }
 
+        private Drawing.Font font;
         /// <summary>
         /// Font used for labeling values on the plot
         /// </summary>
-        public Drawing.Font Font = new();
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
 
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+        private bool showAxisValues = true;
         /// <summary>
         /// If true, each value will be written in text on the plot.
         /// </summary>
-        public bool ShowAxisValues { get; set; } = true;
+        public bool ShowAxisValues { get => showAxisValues; set { showAxisValues = value; OnPropertyChanged(); } }
 
+        private bool showCategoryLabels = true;
         /// <summary>
         /// If true, each category name will be written in text at every corner of the radar
         /// </summary>
-        public bool ShowCategoryLabels { get; set; } = true;
+        public bool ShowCategoryLabels { get => showCategoryLabels; set { showCategoryLabels = value; OnPropertyChanged(); } }
 
+        private RadarAxis axisType = RadarAxis.Circle;
         /// <summary>
         /// Controls rendering style of the concentric circles (ticks) of the web
         /// </summary>
-        public RadarAxis AxisType { get; set; } = RadarAxis.Circle;
+        public RadarAxis AxisType { get => axisType; set { axisType = value; OnPropertyChanged(); } }
 
+        private int lineWidth = 1;
         /// <summary>
         /// Determines the width of each spoke and the axis lines.
         /// </summary>
-        public int LineWidth { get; set; } = 1;
+        public int LineWidth { get =>  lineWidth; set { lineWidth = value; OnPropertyChanged(); } }
 
+        private float outlineWidth = 1;
         /// <summary>
         /// Determines the width of the line at the edge of each area polygon.
         /// </summary>
-        public float OutlineWidth { get; set; } = 1;
+        public float OutlineWidth { get => outlineWidth; set { outlineWidth = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
         public RadarPlot(double[,] values, Color[] lineColors, Color[] fillColors, bool independentAxes, double[] maxValues = null)
         {
+            Font = new();
             LineColors = lineColors;
             FillColors = fillColors;
             IndependentAxes = independentAxes;
@@ -224,10 +261,10 @@ namespace ScottPlot.Plottable
             {
                 var item = new LegendItem(this)
                 {
-                    label = GroupLabels[i],
-                    color = FillColors[i],
-                    lineWidth = 10,
-                    markerShape = MarkerShape.none
+                    Label = GroupLabels[i],
+                    Color = FillColors[i],
+                    LineWidth = 10,
+                    MarkerShape = MarkerShape.none
                 };
                 legendItems.Add(item);
             }

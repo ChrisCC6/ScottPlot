@@ -243,6 +243,36 @@ namespace ScottPlot
 
         #region Axis creation
 
+
+        public Renderable.Axis AddAxis(Renderable.Axis axis)
+        {
+            // check if this is an additional axis, grid settings according to the already available axes
+            bool newAxisIsDefault = settings.Axes.Count(x => x.Edge == axis.Edge) == 0;
+            switch (axis.Edge)
+            {
+                case Renderable.Edge.Left:
+                    axis.Grid(newAxisIsDefault);
+
+                    break;
+                case Renderable.Edge.Right:
+                    axis.Grid(false);
+
+                    break;
+                case Renderable.Edge.Bottom:
+                    axis.Grid(newAxisIsDefault);
+
+                    break;
+                case Renderable.Edge.Top:
+                    axis.Grid(false);
+                    break;
+                default:
+                    throw new NotImplementedException(nameof(axis.Edge));
+                    
+            }
+            return axis;
+        }
+
+        //TODO: mark as Obsolete
         /// <summary>
         /// Create and return an additional axis
         /// </summary>
@@ -256,21 +286,23 @@ namespace ScottPlot
             if (axisIndex <= 1)
                 throw new ArgumentException("The default axes already occupy indexes 0 and 1. Additional axes require higher indexes.");
 
-            Renderable.Axis axis;
-
-            if (edge == Renderable.Edge.Left)
-                axis = new Renderable.AdditionalLeftAxis(axisIndex, title);
-            else if (edge == Renderable.Edge.Right)
-                axis = new Renderable.AdditionalRightAxis(axisIndex, title);
-            else if (edge == Renderable.Edge.Bottom)
-                axis = new Renderable.AdditionalBottomAxis(axisIndex, title);
-            else if (edge == Renderable.Edge.Top)
-                axis = new Renderable.AdditionalTopAxis(axisIndex, title);
-            else
-                throw new NotImplementedException("unsupported edge");
+            Renderable.Axis axis = new();
+            axis.Edge = edge;
+            axis.AxisIndex = axisIndex;
+            axis.AxisTicks.MajorTickVisible = true;
+            axis.AxisTicks.TickLabelVisible = true;
+            axis.AxisTicks.MinorTickVisible = true;
+            axis.AxisTicks.MajorGridVisible = false;
+            axis.AxisLabel.Label = title;
 
             if (color.HasValue)
-                axis.Color(color.Value);
+            {
+                axis.AxisLabel.Font.Color = color.Value;
+                axis.AxisTicks.TickLabelFont.Color = color.Value;
+                axis.AxisTicks.MajorTickColor = color.Value;
+                axis.AxisTicks.MinorTickColor = color.Value;
+                axis.AxisLine.Color = color.Value;
+            }
 
             settings.Axes.Add(axis);
             return axis;

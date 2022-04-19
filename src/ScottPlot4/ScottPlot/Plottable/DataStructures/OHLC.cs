@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,15 +10,23 @@ namespace ScottPlot
     /// <summary>
     /// This class holds open/high/low/close (OHLC) price data over a time range.
     /// </summary>
-    public class OHLC
+    public class OHLC:PropertyNotifier, INotifyPropertyChanged
     {
-        public double Open;
-        public double High;
-        public double Low;
-        public double Close;
-        public double Volume;
-        public DateTime DateTime;
-        public TimeSpan TimeSpan;
+
+        private double open;
+        public double Open { get => open; set { open = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsValid)); } }
+        private double high;
+        public double High { get => high; set { high = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsValid)); } }
+        private double low;
+        public double Low { get => low; set { low = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsValid)); } }
+        private double close;
+        public double Close { get => close; set { close = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsValid)); } }
+        private double volume;
+        public double Volume { get => volume; set { volume = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsValid)); } }
+        private DateTime dateTime;
+        public DateTime DateTime { get => dateTime; set { dateTime = value; OnPropertyChanged(); } }
+        private TimeSpan timeSpan;
+        public TimeSpan TimeSpan { get => timeSpan; set { timeSpan = value; OnPropertyChanged(); } }
 
         private bool IsNanOrInfinity(double val) => double.IsInfinity(val) || double.IsNaN(val);
 

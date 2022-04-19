@@ -9,10 +9,11 @@ using System.Text;
 using ScottPlot.Plottable;
 using System.Linq;
 using System.Diagnostics;
+using System.ComponentModel;
 
 namespace ScottPlot.Renderable
 {
-    public class Legend : IRenderable
+    public class Legend : PropertyNotifier, IRenderable
     {
         /// <summary>
         /// List of items appearing in the legend during the last render
@@ -29,26 +30,66 @@ namespace ScottPlot.Renderable
         /// </summary>
         public bool HasItems => LegendItems is not null && LegendItems.Length > 0;
 
-        public Alignment Location = Alignment.LowerRight;
-        public bool FixedLineWidth = false;
-        public bool ReverseOrder = false;
-        public bool AntiAlias = true;
-        public bool IsVisible { get; set; } = false;
-        public bool IsDetached { get; set; } = false;
+        private Alignment location = Alignment.LowerRight;
+        public Alignment Location { get => location; set { location = value; OnPropertyChanged(); } }
 
-        public Color FillColor = Color.White;
-        public Color OutlineColor = Color.Black;
-        public Color ShadowColor = Color.FromArgb(50, Color.Black);
-        public float ShadowOffsetX = 2;
-        public float ShadowOffsetY = 2;
+        private bool fixedLineWidth = false;
+        public bool FixedLineWidth { get => fixedLineWidth; set { fixedLineWidth = value; OnPropertyChanged(); } }
 
-        public Drawing.Font Font = new Drawing.Font();
+        private bool reverseOrder = false;
+        public bool ReverseOrder { get => reverseOrder; set { reverseOrder = value; OnPropertyChanged(); } }
+
+        private bool antiAlias = true;
+        public bool AntiAlias { get => antiAlias; set { antiAlias = value; OnPropertyChanged(); } }
+
+        private bool isVisible = false;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private bool isDetached = false;
+        public bool IsDetached { get => isDetached; set { isDetached = value; OnPropertyChanged(); } }
+
+
+        private Color fillColor = Color.White;
+        public Color FillColor { get => fillColor; set { fillColor = value; OnPropertyChanged(); } }
+
+        private Color outlineColor = Color.Black;
+        public Color OutlineColor { get => outlineColor; set { outlineColor = value; OnPropertyChanged(); } }
+
+        private Color shadowColor = Color.FromArgb(50, Color.Black);
+        public Color ShadowColor { get => shadowColor; set { shadowColor = value; OnPropertyChanged(); } }
+
+        private float shadowOffsetX = 2;
+        public float ShadowOffsetX { get => shadowOffsetX; set { shadowOffsetX = value; OnPropertyChanged(); } }
+
+        private float shadowOffsetY = 2;
+        public float ShadowOffsetY { get => shadowOffsetY; set { shadowOffsetY = value; OnPropertyChanged(); } }
+
+        private Drawing.Font font;
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
         public string FontName { set { Font.Name = value; } }
         public float FontSize { set { Font.Size = value; } }
         public Color FontColor { set { Font.Color = value; } }
         public bool FontBold { set { Font.Bold = value; } }
 
-        public float Padding = 5;
+        private float padding = 5;
+        public float Padding { get => padding; set { padding = value; OnPropertyChanged(); } }
         private float SymbolWidth { get { return 40 * Font.Size / 12; } }
         private float SymbolPad { get { return Font.Size / 3; } }
         private float MarkerWidth { get { return Font.Size / 2; } }
@@ -100,7 +141,7 @@ namespace ScottPlot.Renderable
             float maxLabelHeight = 0;
             for (int i = 0; i < items.Length; i++)
             {
-                var labelSize = gfx.MeasureString(items[i].label, font);
+                var labelSize = gfx.MeasureString(items[i].Label, font);
                 maxLabelWidth = Math.Max(maxLabelWidth, labelSize.Width);
                 maxLabelHeight = Math.Max(maxLabelHeight, labelSize.Height);
             }
@@ -138,10 +179,10 @@ namespace ScottPlot.Renderable
                     float verticalOffset = i * maxLabelHeight;
 
                     // draw text
-                    gfx.DrawString(item.label, font, textBrush, locationX + SymbolWidth, locationY + verticalOffset);
+                    gfx.DrawString(item.Label, font, textBrush, locationX + SymbolWidth, locationY + verticalOffset);
 
                     // prepare values for drawing a line
-                    outlinePen.Color = item.color;
+                    outlinePen.Color = item.Color;
                     outlinePen.Width = 1;
                     float lineY = locationY + verticalOffset + maxLabelHeight / 2;
                     float lineX1 = locationX + SymbolPad;
@@ -155,8 +196,8 @@ namespace ScottPlot.Renderable
                         SizeF rectSize = new SizeF(lineX2 - lineX1, 10);
                         RectangleF rect = new RectangleF(rectOrigin, rectSize);
                         // draw a rectangle
-                        using (var legendItemFillBrush = GDI.Brush(item.color, item.hatchColor, item.hatchStyle))
-                        using (var legendItemOutlinePen = GDI.Pen(item.borderColor, item.borderWith, item.borderLineStyle))
+                        using (var legendItemFillBrush = GDI.Brush(item.Color, item.HatchColor, item.HatchStyle))
+                        using (var legendItemOutlinePen = GDI.Pen(item.BorderColor, item.BorderWith, item.BorderLineStyle))
                         {
                             gfx.FillRectangle(legendItemFillBrush, rect);
                             gfx.DrawRectangle(legendItemOutlinePen, rect.X, rect.Y, rect.Width, rect.Height);
@@ -165,17 +206,17 @@ namespace ScottPlot.Renderable
                     else
                     {
                         // draw a line
-                        if (item.lineWidth > 0 && item.lineStyle != LineStyle.None)
+                        if (item.LineWidth > 0 && item.LineStyle != LineStyle.None)
                         {
-                            using var linePen = GDI.Pen(item.LineColor, item.lineWidth, item.lineStyle, false);
+                            using var linePen = GDI.Pen(item.LineColor, item.LineWidth, item.LineStyle, false);
                             gfx.DrawLine(linePen, lineX1, lineY, lineX2, lineY);
                         }
 
                         // and perhaps a marker in the middle of the line
                         float lineXcenter = (lineX1 + lineX2) / 2;
                         PointF markerPoint = new PointF(lineXcenter, lineY);
-                        if ((item.markerShape != MarkerShape.none) && (item.markerSize > 0))
-                            MarkerTools.DrawMarker(gfx, markerPoint, item.markerShape, item.markerSize, item.MarkerColor, item.markerLineWidth);
+                        if ((item.MarkerShape != MarkerShape.none) && (item.MarkerSize > 0))
+                            MarkerTools.DrawMarker(gfx, markerPoint, item.MarkerShape, item.MarkerSize, item.MarkerColor, item.MarkerLineWidth);
                     }
 
                     // Typically invisible legend items don't make it in the list.
@@ -197,7 +238,7 @@ namespace ScottPlot.Renderable
                 .Where(x => x.GetLegendItems() != null)
                 .Where(x => x.IsVisible || includeHidden)
                 .SelectMany(x => x.GetLegendItems())
-                .Where(x => !string.IsNullOrWhiteSpace(x.label))
+                .Where(x => !string.IsNullOrWhiteSpace(x.Label))
                 .ToArray();
 
             if (ReverseOrder)

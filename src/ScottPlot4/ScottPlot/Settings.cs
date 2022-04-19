@@ -20,7 +20,7 @@ namespace ScottPlot
         /// This List contains all plottables managed by this Plot.
         /// Render order is from lowest (first) to highest (last).
         /// </summary>
-        public readonly ObservableCollection<IPlottable> Plottables = new();
+        public readonly PlottableCollection Plottables = new();
 
         /// <summary>
         /// Unique value that changes any time the list of plottables is modified.
@@ -44,13 +44,7 @@ namespace ScottPlot
         /// List of all axes used in this plot.
         /// Axes can be added, but existing ones should not be removed.
         /// </summary>
-        public List<Axis> Axes = new()
-        {
-            new DefaultLeftAxis(),
-            new DefaultRightAxis(),
-            new DefaultBottomAxis(),
-            new DefaultTopAxis()
-        };
+        public AxisCollection Axes = new();
 
         /// <summary>
         /// Get an array containing just horizontal axes
@@ -99,22 +93,33 @@ namespace ScottPlot
         /// <summary>
         /// Primary vertical axis (on the left of the plot)
         /// </summary>
-        public Axis YAxis => Axes[0];
+        public Axis YAxis => Axes.FirstOrDefault(x => x.Edge == Edge.Left); //Axes[0];
+
+        /// <summary>
+        /// Primary vertical axes (on the left of the plot) ordered by AxesIndex
+        /// </summary>
+        //public Axis[] PrimaryYAxes => Axes.Where(x => x.Edge == Edge.Right).OrderBy(x => x.AxisIndex).ToArray();
+
 
         /// <summary>
         /// Secondary vertical axis (on the right of the plot)
         /// </summary>
-        public Axis YAxis2 => Axes[1];
+        public Axis YAxis2 => Axes.FirstOrDefault(x => x.Edge == Edge.Right); //Axes[1];
+
+        /// <summary>
+        /// Secondary vertical axes (on the right of the plot)
+        /// </summary>
+        //public Axis[] SecondaryYAxes => Axes.Where(x => x.Edge == Edge.Right).OrderBy(x => x.AxisIndex).ToArray();
 
         /// <summary>
         /// Primary horizontal axis (on the bottom of the plot)
         /// </summary>
-        public Axis XAxis => Axes[2];
+        public Axis XAxis => Axes.FirstOrDefault(x => x.Edge == Edge.Bottom); //Axes[2];
 
         /// <summary>
         /// Secondary horizontal axis (on the top of the plot)
         /// </summary>
-        public Axis XAxis2 => Axes[3];
+        public Axis XAxis2 => Axes.FirstOrDefault(x => x.Edge == Edge.Top); //Axes[3];
 
         /// <summary>
         /// Width of the figure (in pixels)

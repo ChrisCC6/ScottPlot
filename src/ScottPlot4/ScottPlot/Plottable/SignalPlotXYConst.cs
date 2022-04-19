@@ -22,5 +22,6 @@ namespace ScottPlot.Plottable
             string label = string.IsNullOrWhiteSpace(this.Label) ? "" : $" ({this.Label})";
             return $"PlottableSignalXYConst{label} with {PointCount} points ({typeof(TX).Name}, {typeof(TY).Name})";
         }
+
     }
 }

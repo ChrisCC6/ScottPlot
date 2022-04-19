@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace ScottPlot.Renderable
 {
-    public class ZoomRectangle : IRenderable
+    public class ZoomRectangle : PropertyNotifier,  IRenderable
     {
         private float X;
         private float Y;

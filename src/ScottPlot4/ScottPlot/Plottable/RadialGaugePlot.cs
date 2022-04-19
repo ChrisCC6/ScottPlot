@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using ScottPlot.Drawing;
@@ -13,119 +14,142 @@ namespace ScottPlot.Plottable
     /// A radial gauge chart is a graphical method of displaying scalar data in the form of 
     /// a chart made of circular gauges so that each scalar is represented by each gauge.
     /// </summary>
-    public class RadialGaugePlot : IPlottable
+    public class RadialGaugePlot : PropertyNotifier, IPlottable
     {
+        private double[] levels;
         /// <summary>
         /// This array holds the original levels passed-in by the user. 
         /// These levels are used to calculate radial gauge positions on every render.
         /// </summary>
-        public double[] Levels { get; private set; }
+        public double[] Levels { get => levels; private set { levels = value; OnPropertyChanged(); OnPropertyChanged(nameof(GaugeCount)); } }
 
         /// <summary>
         /// Number of gauges.
         /// </summary>
         public int GaugeCount => Levels.Length;
 
+        private double maximumAngle = 360;
         /// <summary>
         /// Maximum size (degrees) for the gauge.
         /// 180 is a semicircle and 360 is a full circle.
         /// </summary>
-        public double MaximumAngle = 360;
+        public double MaximumAngle { get => maximumAngle; set { maximumAngle = value; OnPropertyChanged(); } }
 
+        private bool circularBackground = true;
         /// <summary>
         /// Controls whether the backgrounds of the gauges are full circles or stop at the maximum angle.
         /// </summary>
-        public bool CircularBackground = true;
+        public bool CircularBackground { get => circularBackground; set { circularBackground = value; OnPropertyChanged(); } }
 
+        private string[] labels;
         /// <summary>
         /// Labels that appear in the legend for each gauge.
         /// Number of labels must equal number of gauges.
         /// May be null if gauges are not to appear in the legend.
         /// </summary>
-        public string[] Labels;
+        public string[] Labels { get => labels; set { labels = value; OnPropertyChanged(); } }
 
+        private Color[] colors;
         /// <summary>
         /// Colors for each gauge.
         /// Number of colors must equal number of gauges.
         /// </summary>
-        public Color[] Colors;
+        public Color[] Colors { get => colors; set { colors = value; OnPropertyChanged(); } }
 
+        private double backgroundTransparencyFraction = .15;
         /// <summary>
         /// Describes how transparent the unfilled background of each gauge is (0 to 1).
         /// The larger the number the darker the background becomes.
         /// </summary>
-        public double BackgroundTransparencyFraction = .15;
+        public double BackgroundTransparencyFraction { get => backgroundTransparencyFraction; set { backgroundTransparencyFraction = value; OnPropertyChanged(); } }
 
+        private bool clockwise;
         /// <summary>
-        /// Indicates whether gauges fill clockwise as levels increase.
-        /// If false, gauges will fill counter-clockwise (anti-clockwise).
+        /// If true angles end clockwise relative to their base
         /// </summary>
-        public bool Clockwise = true;
+        public bool Clockwise { get => clockwise; set { clockwise = value; OnPropertyChanged(); } }
 
+        private RadialGaugeMode gaugeMode = RadialGaugeMode.Stacked;
         /// <summary>
         /// Determines whether the gauges are drawn stacked (dafault value), sequentially, or as a single gauge (ressembling a pie plot).
         /// </summary>
-        public RadialGaugeMode GaugeMode = RadialGaugeMode.Stacked;
+        public RadialGaugeMode GaugeMode { get => gaugeMode; set { gaugeMode = value; OnPropertyChanged(); } }
 
+        private bool orderInsideOut = true;
         /// <summary>
         /// Controls whether gauges will be dwan inside-out (true) or outside-in (false)
         /// </summary>
-        public bool OrderInsideOut = true;
+        public bool OrderInsideOut { get => orderInsideOut; set { orderInsideOut = value; OnPropertyChanged(); } }
 
+        private double labelPositionFraction = 1;
         /// <summary>
         /// Defines where the gauge label is written on the gage as a fraction of its length.
         /// Low values place the label near the base and high values place the label at its tip.
         /// </summary>
-        public double LabelPositionFraction = 1;
+        public double LabelPositionFraction { get => labelPositionFraction; set { labelPositionFraction = value; OnPropertyChanged(); } }
 
+        private float startingAngle = 270;
         /// <summary>
         /// Angle (degrees) at which the gauges start.
         /// 270° for North (default value), 0° for East, 90° for South, 180° for West, etc.
         /// Expected values in the range [0°-360°], otherwise unexpected side-effects might happen.
         /// </summary>
-        public float StartingAngle = 270;
+        public float StartingAngle { get => startingAngle; set { startingAngle = value; OnPropertyChanged(); } }
 
+        private double spaceFraction = .5f;
         /// <summary>
         /// The empty space between gauges as a fraction of the gauge width.
         /// </summary>
-        public double SpaceFraction = .5f;
+        public double SpaceFraction { get => spaceFraction; set { spaceFraction = value; OnPropertyChanged(); } }
 
+        private double fontSizeFraction = .75;
         /// <summary>
         /// Size of the gague label text as a fraction of the gauge width.
         /// </summary>
-        public double FontSizeFraction = .75;
+        public double FontSizeFraction { get => fontSizeFraction; set { fontSizeFraction = value; OnPropertyChanged(); } }
 
+        private Drawing.Font font;
         /// <summary>
         /// Describes labels drawn on each gauge.
         /// </summary>
-        public readonly Drawing.Font Font = new() { Bold = true, Color = Color.White };
+        public Drawing.Font Font { get => font; set { font = value; OnPropertyChanged(); } }
 
+        private bool showLevels = true;
         /// <summary>
         /// Controls if value labels are shown inside the gauges.
         /// </summary>
-        public bool ShowLevels { get; set; } = true;
+        public bool ShowLevels { get => showLevels; set { showLevels = value; OnPropertyChanged(); } }
 
+        private string levelTextFormat = "0.##";
         /// <summary>
         /// String formatter to use for converting gauge levels to text
         /// </summary>
-        public string LevelTextFormat = "0.##";
+        public string LevelTextFormat { get => levelTextFormat; set { levelTextFormat = value; OnPropertyChanged(); } }
 
-        /// <summary>
-        /// Style of the tip of the gauge
-        /// </summary>
-        public System.Drawing.Drawing2D.LineCap EndCap { get; set; } = System.Drawing.Drawing2D.LineCap.Triangle;
-
+        private System.Drawing.Drawing2D.LineCap startCap = System.Drawing.Drawing2D.LineCap.Triangle;
         /// <summary>
         /// Style of the base of the gauge
         /// </summary>
-        public System.Drawing.Drawing2D.LineCap StartCap { get; set; } = System.Drawing.Drawing2D.LineCap.Round;
+        public System.Drawing.Drawing2D.LineCap StartCap { get => startCap; set { startCap = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private System.Drawing.Drawing2D.LineCap endCap = System.Drawing.Drawing2D.LineCap.Round;
+        /// <summary>
+        /// Style of the tip of the gauge
+        /// </summary>
+        public System.Drawing.Drawing2D.LineCap EndCap { get => endCap; set { endCap = value; OnPropertyChanged(); } }
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
         public RadialGaugePlot(double[] levels, Color[] colors)
         {
+            Font = new() { Bold = true, Color = Color.White };
             Update(levels, colors);
         }
 
@@ -232,10 +256,10 @@ namespace ScottPlot.Plottable
             {
                 var item = new LegendItem(this)
                 {
-                    label = Labels[i],
-                    color = Colors[i],
-                    lineWidth = 10,
-                    markerShape = MarkerShape.none
+                    Label = Labels[i],
+                    Color = Colors[i],
+                    LineWidth = 10,
+                    MarkerShape = MarkerShape.none
                 };
                 legendItems.Add(item);
             }

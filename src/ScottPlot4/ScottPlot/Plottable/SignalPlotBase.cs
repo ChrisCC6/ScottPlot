@@ -9,72 +9,105 @@ using System.Linq.Expressions;
 
 namespace ScottPlot.Plottable
 {
-    public abstract class SignalPlotBase<T> : IPlottable, IHasLine, IHasMarker, IHighlightable, IHasColor, IHasPointsGenericX<double, T> where T : struct, IComparable
+    public abstract class SignalPlotBase<T> : PropertyNotifier, IPlottable, IHasLine, IHasMarker, IHighlightable, IHasColor, IHasPointsGenericX<double, T> where T : struct, IComparable
     {
-        protected IMinMaxSearchStrategy<T> Strategy = new SegmentedTreeMinMaxSearchStrategy<T>();
-        protected bool MaxRenderIndexLowerYSPromise = false;
-        protected bool MaxRenderIndexHigherMinRenderIndexPromise = false;
-        protected bool FillColor1MustBeSetPromise = false;
-        protected bool FillColor2MustBeSetPromise = false;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public bool IsVisible { get; set; } = true;
-        public bool StepDisplay { get; set; } = false;
+        private IMinMaxSearchStrategy<T> strategy = new SegmentedTreeMinMaxSearchStrategy<T>();
+        protected IMinMaxSearchStrategy<T> Strategy { get => strategy; set { strategy = value; OnPropertyChanged(); } }
+        private bool maxRenderIndexLowerYSPromise = false;
+        protected bool MaxRenderIndexLowerYSPromise { get => maxRenderIndexLowerYSPromise; set { maxRenderIndexLowerYSPromise = value; OnPropertyChanged(); } }
+        private bool maxRenderIndexHigherMinRenderIndexPromise = false;
+        protected bool MaxRenderIndexHigherMinRenderIndexPromise { get => maxRenderIndexHigherMinRenderIndexPromise; set { maxRenderIndexHigherMinRenderIndexPromise = value; OnPropertyChanged(); } }
+        private bool fillColor1MustBeSetPromise = false;
+        protected bool FillColor1MustBeSetPromise { get => fillColor1MustBeSetPromise; set { fillColor1MustBeSetPromise = value; OnPropertyChanged(); } }
+        private bool fillColor2MustBeSetPromise = false;
+        protected bool FillColor2MustBeSetPromise { get => fillColor2MustBeSetPromise; set { fillColor2MustBeSetPromise = value; OnPropertyChanged(); } }
 
-        public float _markerSize = 5;
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private bool stepDisplay = false;
+        public bool StepDisplay { get => stepDisplay; set { stepDisplay = value; OnPropertyChanged(); } }
+
+        private float markerSize = 5;
+        /// <summary>
+        /// Size of the marker in pixel units
+        /// </summary>
         public float MarkerSize
         {
-            get => IsHighlighted ? _markerSize * HighlightCoefficient : _markerSize;
-            set { _markerSize = value; }
+            get => IsHighlighted ? markerSize * HighlightCoefficient : markerSize;
+            set { markerSize = value; OnPropertyChanged(); }
         }
 
-        public MarkerShape MarkerShape { get; set; } = MarkerShape.filledCircle;
-        public double OffsetX { get; set; } = 0;
-        public T OffsetY { get; set; } = default;
+        private MarkerShape markerShape = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
 
-        private double _lineWidth = 1;
+        private double offsetX = 0;
+        public double OffsetX { get => offsetX; set { offsetX = value; OnPropertyChanged(); } }
+
+        private T offsetY = default;
+        public T OffsetY { get => offsetY; set { offsetY = value; OnPropertyChanged(); } }
+
+        private double lineWidth = 1;
         public double LineWidth
         {
-            get => IsHighlighted ? _lineWidth * HighlightCoefficient : _lineWidth;
-            set { _lineWidth = value; }
+            get => IsHighlighted ? lineWidth * HighlightCoefficient : lineWidth;
+            set { lineWidth = value; OnPropertyChanged(); }
         }
 
-        private float _markerLineWidth;
+        private float markerLineWidth;
         public float MarkerLineWidth
         {
-            get => IsHighlighted ? (float)_markerLineWidth * HighlightCoefficient : _markerLineWidth;
-            set { _markerLineWidth = value; }
+            get => IsHighlighted ? (float)markerLineWidth * HighlightCoefficient : markerLineWidth;
+            set { markerLineWidth = value; OnPropertyChanged(); }
         }
 
-        public string Label { get; set; } = null;
-        public Color Color { get; set; } = Color.Green;
-        public Color LineColor { get => Color; set { Color = value; } }
-        public Color MarkerColor { get => Color; set { Color = value; } }
-        public LineStyle LineStyle { get; set; } = LineStyle.Solid;
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
-        public bool IsHighlighted { get; set; } = false;
-        public float HighlightCoefficient { get; set; } = 2;
+        private Color color = Color.Green;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
 
+        public Color LineColor { get => Color; set { Color = value; OnPropertyChanged(); } }
+
+        public Color MarkerColor { get => Color; set { Color = value; OnPropertyChanged(); } }
+
+        private LineStyle lineStyle = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
+
+        private bool isHighlighted = false;
+        public bool IsHighlighted { get => isHighlighted; set { isHighlighted = value; OnPropertyChanged(); } }
+
+        private float highlightCoefficient = 2;
+        public float HighlightCoefficient { get => highlightCoefficient; set { highlightCoefficient = value; OnPropertyChanged(); } }
+
+        private bool useParallel = true;
         /// <summary>
         /// If enabled, parallel processing will be used to calculate pixel positions for high density datasets.
         /// </summary>
-        public bool UseParallel { get; set; } = true;
+        public bool UseParallel { get => useParallel; set { useParallel = value; OnPropertyChanged(); } }
 
-
+        private double baselineY = 0;
         /// <summary>
         /// If fill above and/or below is enabled, this defines the baseline level.
         /// </summary>
-        public double BaselineY { get; set; } = 0;
+        public double BaselineY { get => baselineY; set { baselineY = value; OnPropertyChanged(); } }
 
+        private Color baselineColor = Color.Black;
         /// <summary>
         /// If fill is enabled, a baseline will be drawn using this color.
         /// </summary>
-        public Color BaselineColor { get; set; } = Color.Black;
+        public Color BaselineColor { get => baselineColor; set { baselineColor = value; OnPropertyChanged(); } }
 
+        private float baselineWidth = 1;
         /// <summary>
         /// If fill is enabled, a baseline will be drawn using this width.
         /// </summary>
-        public float BaselineWidth { get; set; } = 1;
+        public float BaselineWidth { get => baselineWidth; set { baselineWidth = value; OnPropertyChanged(); } }
+
 
         /// <summary>
         /// If fill is enabled, this color will be used to fill the area below the curve above BaselineY.
@@ -112,8 +145,10 @@ namespace ScottPlot.Plottable
 
                 _Ys = value;
                 Strategy.SourceArray = _Ys;
+                OnPropertyChanged();
             }
         }
+
 
         private double _SampleRate = 1;
         public double SampleRate
@@ -125,6 +160,7 @@ namespace ScottPlot.Plottable
                     throw new Exception("SampleRate must be greater then zero");
                 _SampleRate = value;
                 _SamplePeriod = 1.0 / value;
+                OnPropertyChanged();
             }
         }
 
@@ -138,6 +174,7 @@ namespace ScottPlot.Plottable
                     throw new Exception("SamplePeriod must be greater then zero");
                 _SamplePeriod = value;
                 _SampleRate = 1.0 / value;
+                OnPropertyChanged();
             }
         }
 
@@ -153,6 +190,7 @@ namespace ScottPlot.Plottable
                 MaxRenderIndexHigherMinRenderIndexPromise = value > MaxRenderIndex;
 
                 _MinRenderIndex = value;
+                OnPropertyChanged();
             }
         }
         protected int _maxRenderIndex = 0;
@@ -169,6 +207,7 @@ namespace ScottPlot.Plottable
                 MaxRenderIndexLowerYSPromise = value > _Ys.Length - 1;
 
                 _maxRenderIndex = value;
+                OnPropertyChanged();
             }
         }
 
@@ -189,6 +228,7 @@ namespace ScottPlot.Plottable
                         PenColorsByDensity[DensityLevelCount - 1 - i] = value[i];
                     }
                 }
+                OnPropertyChanged();
             }
         }
 
@@ -749,12 +789,12 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = Color,
-                lineStyle = LineStyle,
-                lineWidth = LineWidth,
-                markerShape = ShowMarkersInLegend ? MarkerShape.filledCircle : MarkerShape.none,
-                markerSize = ShowMarkersInLegend ? MarkerSize : 0
+                Label = this.Label,
+                Color = this.Color,
+                LineStyle = this.LineStyle,
+                LineWidth = this.LineWidth,
+                MarkerShape = ShowMarkersInLegend ? MarkerShape.filledCircle : MarkerShape.none,
+                MarkerSize = ShowMarkersInLegend ? this.MarkerSize : 0
             };
             return new LegendItem[] { singleLegendItem };
         }
@@ -921,5 +961,6 @@ namespace ScottPlot.Plottable
             _FillColor2 = GDI.Semitransparent(below2, alpha);
             _GradientFillColor2 = GDI.Semitransparent(below1, alpha);
         }
+
     }
 }

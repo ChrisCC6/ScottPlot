@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -16,25 +17,59 @@ namespace ScottPlot.Plottable
     /// MouseMove events to track the location of the mouse and/or with plot types that
     /// have GetPointNearest() methods.
     /// </summary>
-    public class Crosshair : IPlottable, IHasLine, IHasColor
+    public class Crosshair : PropertyNotifier, IPlottable, IHasLine, IHasColor
     {
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
-        public readonly HLine HorizontalLine = new();
+        private HLine horizontalLine;
+        public HLine HorizontalLine
+        {
+            get => horizontalLine;
+            set
+            {
+                if (horizontalLine != null)
+                    horizontalLine.PropertyChanged -= Internal_PropertyChanged;
+                horizontalLine = value;
+                if (horizontalLine != null)
+                    horizontalLine.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
 
-        public readonly VLine VerticalLine = new();
+        private VLine verticalLine;
+        public VLine VerticalLine
+        { 
+            get => verticalLine;
+            set 
+            {
+                if (verticalLine != null)
+                    verticalLine.PropertyChanged -= Internal_PropertyChanged;
+                verticalLine = value;
+                if (verticalLine != null)
+                    verticalLine.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
 
         /// <summary>
         /// X position (axis units) of the vertical line
         /// </summary>
-        public double X { get => VerticalLine.X; set => VerticalLine.X = value; }
+        public double X { get => VerticalLine.X; set { VerticalLine.X = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// X position (axis units) of the horizontal line
         /// </summary>
-        public double Y { get => HorizontalLine.Y; set => HorizontalLine.Y = value; }
+        public double Y { get => HorizontalLine.Y; set { HorizontalLine.Y = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Sets style for horizontal and vertical lines
@@ -45,6 +80,7 @@ namespace ScottPlot.Plottable
             {
                 HorizontalLine.LineStyle = value;
                 VerticalLine.LineStyle = value;
+                OnPropertyChanged();
             }
             get => HorizontalLine.LineStyle;
         }
@@ -58,6 +94,7 @@ namespace ScottPlot.Plottable
             {
                 HorizontalLine.LineWidth = value;
                 VerticalLine.LineWidth = value;
+                OnPropertyChanged();
             }
             get => (float)HorizontalLine.LineWidth;
         }
@@ -71,6 +108,7 @@ namespace ScottPlot.Plottable
             {
                 HorizontalLine.PositionLabelFont = value;
                 VerticalLine.PositionLabelFont = value;
+                OnPropertyChanged();
             }
             [Obsolete("The get method only remain for the compatibility. Get HorizontalLine.PositionLabelFont and VerticalLine.PositionLabelFont instead.")]
             get => HorizontalLine.PositionLabelFont;
@@ -85,6 +123,7 @@ namespace ScottPlot.Plottable
             {
                 HorizontalLine.PositionLabelBackground = value;
                 VerticalLine.PositionLabelBackground = value;
+                OnPropertyChanged();
             }
             [Obsolete("The get method only remain for the compatibility. Get HorizontalLine.PositionLabelBackground and VerticalLine.PositionLabelBackground instead.")]
             get => HorizontalLine.PositionLabelBackground;
@@ -99,7 +138,9 @@ namespace ScottPlot.Plottable
             {
                 HorizontalLine.PositionLabel = value;
                 VerticalLine.PositionLabel = value;
+                OnPropertyChanged();
             }
+            get => HorizontalLine.PositionLabel;
         }
 
         /// <summary>
@@ -113,6 +154,7 @@ namespace ScottPlot.Plottable
                 VerticalLine.Color = value;
                 HorizontalLine.PositionLabelBackground = value;
                 VerticalLine.PositionLabelBackground = value;
+                OnPropertyChanged();
             }
             get
             {
@@ -120,10 +162,12 @@ namespace ScottPlot.Plottable
             }
         }
 
-        public Color LineColor { get => Color; set { Color = value; } }
+        public Color LineColor { get => Color; set { Color = value; OnPropertyChanged(); } }
 
         public Crosshair()
         {
+            HorizontalLine = new();
+            VerticalLine = new();
             LineStyle = LineStyle.Dash;
             LineWidth = 1;
             Color = Color.FromArgb(200, Color.Red);

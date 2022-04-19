@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -15,15 +16,17 @@ namespace ScottPlot.Plottable
     /// </summary>
     public class ClevelandDotPlot : BarPlotBase, IPlottable
     {
+        private Color stemColor = Color.Gray;
         /// <summary>
         /// Color for the line
         /// </summary>
-        public Color StemColor = Color.Gray;
+        public Color StemColor { get => stemColor; set { stemColor = value; OnPropertyChanged(); } }
 
+        private float dotRadius = 5;
         /// <summary>
         /// Size of the markers at the ends of each line
         /// </summary>
-        public float DotRadius { get; set; } = 5;
+        public float DotRadius { get => dotRadius; set { dotRadius = value; OnPropertyChanged(); } }
 
         // TODO: don't expose these, instead put them behind an Update() method
         // that lets the user update one or both arrays. This can also perform length checking.
@@ -37,6 +40,7 @@ namespace ScottPlot.Plottable
 
                 if (Ys2 != null)
                     Ys2 = (Ys2 ?? DataGen.Zeros(value.Length)).Zip(diff, (y, v) => y + v).ToArray();
+                OnPropertyChanged();
             }
         }
 
@@ -54,6 +58,7 @@ namespace ScottPlot.Plottable
             {
                 double[] offsets = Ys1 ?? DataGen.Zeros(value.Length);
                 Values = value.Select((y, i) => y - offsets[i]).ToArray();
+                OnPropertyChanged();
             }
         }
 
@@ -157,19 +162,19 @@ namespace ScottPlot.Plottable
         {
             var firstDot = new LegendItem(this)
             {
-                label = Label1,
-                color = Color1,
-                lineStyle = LineStyle.None,
-                markerShape = MarkerShape1,
-                markerSize = 5,
+                Label = this.Label1,
+                Color = this.Color1,
+                LineStyle = LineStyle.None,
+                MarkerShape = this.MarkerShape1,
+                MarkerSize = 5,
             };
             var secondDot = new LegendItem(this)
             {
-                label = Label2,
-                color = Color2,
-                lineStyle = LineStyle.None,
-                markerShape = MarkerShape2,
-                markerSize = 5,
+                Label = this.Label2,
+                Color = this.Color2,
+                LineStyle = LineStyle.None,
+                MarkerShape = this.MarkerShape2,
+                MarkerSize = 5,
             };
 
             return new LegendItem[] { firstDot, secondDot };

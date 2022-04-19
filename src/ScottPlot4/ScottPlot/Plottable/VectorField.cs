@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using ScottPlot.Statistics;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 
@@ -9,48 +10,59 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// The VectorField displays arrows representing a 2D array of 2D vectors
     /// </summary>
-    public class VectorField : IPlottable
+    public class VectorField : PropertyNotifier, IPlottable
     {
-        private readonly double[] Xs;
-        private readonly double[] Ys;
-        private readonly Vector2[,] Vectors;
-        private readonly Color[] VectorColors;
-        public string Label;
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private double[] xs;
+        public double[] Xs { get => xs; private set { xs = value; OnPropertyChanged(); } }
+        private double[] ys;
+        public double[] Ys { get => ys; private set { ys = value; OnPropertyChanged(); } }
+
+        private Vector2[,] vectors;
+        public Vector2[,] Vectors { get => vectors; private set { vectors = value; OnPropertyChanged(); OnPropertyChanged(nameof(PointCount)); } }
+        private  Color[] vectorColors;
+        public Color[] VectorColors { get => vectorColors; private set { vectorColors = value; OnPropertyChanged(); } }
+
+
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
 
         private readonly Renderable.ArrowStyle ArrowStyle = new();
 
         /// <summary>
         /// Describes which part of the vector line will be placed at the data coordinates.
         /// </summary>
-        public ArrowAnchor Anchor { get => ArrowStyle.Anchor; set => ArrowStyle.Anchor = value; }
+        public ArrowAnchor Anchor { get => ArrowStyle.Anchor; set { ArrowStyle.Anchor = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// If enabled arrowheads will be drawn as lines scaled to each vector's magnitude.
         /// </summary>
-        public bool ScaledArrowheads { get => ArrowStyle.ScaledArrowheads; set => ArrowStyle.ScaledArrowheads = value; }
+        public bool ScaledArrowheads { get => ArrowStyle.ScaledArrowheads; set { ArrowStyle.ScaledArrowheads = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// When using scaled arrowheads this defines the width of the arrow relative to the vector line's length.
         /// </summary>
-        public double ScaledArrowheadWidth { get => ArrowStyle.ScaledArrowheadWidth; set => ArrowStyle.ScaledArrowheadWidth = value; }
+        public double ScaledArrowheadWidth { get => ArrowStyle.ScaledArrowheadWidth; set { ArrowStyle.ScaledArrowheadWidth = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// When using scaled arrowheads this defines length of the arrowhead relative to the vector line's length.
         /// </summary>
-        public double ScaledArrowheadLength { get => ArrowStyle.ScaledArrowheadLength; set => ArrowStyle.ScaledArrowheadLength = value; }
+        public double ScaledArrowheadLength { get => ArrowStyle.ScaledArrowheadLength; set { ArrowStyle.ScaledArrowheadLength = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Marker drawn at each coordinate
         /// </summary>
-        public MarkerShape MarkerShape { get => ArrowStyle.MarkerShape; set => ArrowStyle.MarkerShape = value; }
+        public MarkerShape MarkerShape { get => ArrowStyle.MarkerShape; set { ArrowStyle.MarkerShape = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Size of markers to be drawn at each coordinate
         /// </summary>
-        public float MarkerSize { get => ArrowStyle.MarkerSize; set => ArrowStyle.MarkerSize = value; }
+        public float MarkerSize { get => ArrowStyle.MarkerSize; set { ArrowStyle.MarkerSize = value; OnPropertyChanged(); } }
 
         public VectorField(Vector2[,] vectors, double[] xs, double[] ys, Colormap colormap, double scaleFactor, Color defaultColor)
         {
@@ -96,10 +108,10 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = VectorColors[0],
-                lineWidth = 10,
-                markerShape = MarkerShape.none
+                Label = Label,
+                Color = VectorColors[0],
+                LineWidth = 10,
+                MarkerShape = MarkerShape.none
             };
             return new LegendItem[] { singleLegendItem };
         }

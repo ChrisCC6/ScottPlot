@@ -1,6 +1,7 @@
 ﻿using ScottPlot.Drawing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -11,10 +12,9 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// A Pie chart where the angle of slices is constant but the radii are not.
     /// </summary>
-    public class CoxcombPlot : IPlottable
+    public class CoxcombPlot : PropertyNotifier, IPlottable
     {
         private double[] _values;
-
         /// <summary>
         /// The data to be plotted
         /// </summary>
@@ -25,45 +25,61 @@ namespace ScottPlot.Plottable
             {
                 _values = value;
                 Normalized = Normalize(value);
+                OnPropertyChanged();
             }
         }
+
+        private Color[] fillColors;
         /// <summary>
         /// The colors of each slice
         /// </summary>
-        public Color[] FillColors { get; set; }
+        public Color[] FillColors { get => fillColors; set { fillColors = value; OnPropertyChanged(); } }
 
+        private Color webColor = Color.Gray;
         /// <summary>
         /// The color to draw the axis in
         /// </summary>
-        public Color WebColor { get; set; } = Color.Gray;
+        public Color WebColor { get => webColor; set { webColor = value; OnPropertyChanged(); } }
 
+        private RadarAxis axisType = RadarAxis.Circle;
         /// <summary>
         /// Controls rendering style of the concentric circles (ticks) of the web
         /// </summary>
-        public RadarAxis AxisType { get; set; } = RadarAxis.Circle;
+        public RadarAxis AxisType { get => axisType; set { axisType = value; OnPropertyChanged(); } }
 
+        private bool showAxisValues = true;
         /// <summary>
         /// If true, each value will be written in text on the plot.
         /// </summary>
-        public bool ShowAxisValues { get; set; } = true;
+        public bool ShowAxisValues { get => showAxisValues; set { showAxisValues = value; OnPropertyChanged(); } }
 
+        private string[] sliceLabels;
         /// <summary>
         /// Labels for each category.
         /// Length must be equal to the number of columns (categories) in the original data.
         /// </summary>
-        public string[] SliceLabels;
+        public string[] SliceLabels { get => sliceLabels; set { sliceLabels = value; OnPropertyChanged(); } }
 
+        private System.Drawing.Image[] categoryImages;
         /// <summary>
         /// Icons for each category.
         /// Length must be equal to the number of columns (categories) in the original data. 
         /// </summary>
-        public System.Drawing.Image[] CategoryImages { get; set; }
+        public System.Drawing.Image[] CategoryImages { get => categoryImages; set { categoryImages = value; OnPropertyChanged(); } }
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
-        public string Label;
+
+        private string label;
+        /// <summary>
+        /// Text displayed in the annotation
+        /// </summary>
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
         private double[] Normalized;
 
@@ -154,7 +170,7 @@ namespace ScottPlot.Plottable
 
             return Enumerable
                 .Range(0, Values.Length)
-                .Select(i => new LegendItem(this) { label = SliceLabels[i], color = FillColors[i], lineWidth = 10 })
+                .Select(i => new LegendItem(this) { Label = SliceLabels[i], Color = FillColors[i], LineWidth = 10 })
                 .ToArray();
         }
 

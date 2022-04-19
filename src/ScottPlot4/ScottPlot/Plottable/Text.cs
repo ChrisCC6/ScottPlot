@@ -9,31 +9,62 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// Display a text label at an X/Y position in coordinate space
     /// </summary>
-    public class Text : IPlottable, IHasPixelOffset, IDraggable, IHasColor
+    public class Text : PropertyNotifier, IPlottable, IHasPixelOffset, IDraggable, IHasColor
     {
         // data
-        public double X;
-        public double Y;
-        public string Label;
+        private double x;
+        public double X { get => x; set { x = value; OnPropertyChanged(); } }
+        private double y;
+        public double Y { get => y; set { y = value; OnPropertyChanged(); } }
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
         // customization
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public bool BackgroundFill = false;
-        public Color BackgroundColor;
-        public Drawing.Font Font = new Drawing.Font();
-        public Color Color { get => Font.Color; set => Font.Color = value; }
-        public string FontName { set => Font.Name = value; }
-        public float FontSize { set => Font.Size = value; }
-        public bool FontBold { set => Font.Bold = value; }
-        public Alignment Alignment { set => Font.Alignment = value; }
-        public float Rotation { set => Font.Rotation = value; }
-        public float BorderSize { get; set; } = 0;
-        public Color BorderColor { get; set; } = Color.Black;
-        public float PixelOffsetX { get; set; } = 0;
-        public float PixelOffsetY { get; set; } = 0;
-        RectangleF LastRenderRectangleCoordinates;
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private bool backgroundFill = false;
+        public bool BackgroundFill { get => backgroundFill; set { backgroundFill = value; OnPropertyChanged(); } }
+        private Color backgroundColor;
+        public Color BackgroundColor { get => backgroundColor; set { backgroundColor = value; OnPropertyChanged(); } }
+        private Drawing.Font font;
+        public Drawing.Font Font
+        {
+            get => font;
+            set
+            {
+                if (font != null)
+                    font.PropertyChanged -= Internal_PropertyChanged;
+                font = value;
+                if (font != null)
+                    font.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+        public Color Color { get => Font.Color; set { Font.Color = value; OnPropertyChanged(); } }
+        public string FontName { get => Font.Name; set { Font.Name = value; OnPropertyChanged(); } }
+        public float FontSize { get => Font.Size; set { Font.Size = value; OnPropertyChanged(); } }
+        public bool FontBold { get => Font.Bold; set { Font.Bold = value; OnPropertyChanged(); } }
+        public Alignment Alignment { get => Font.Alignment; set { Font.Alignment = value; OnPropertyChanged(); } }
+        public float Rotation { get => Font.Rotation; set { Font.Rotation = value; OnPropertyChanged(); } }
+        private float borderSize = 0;
+        public float BorderSize { get => borderSize; set { borderSize = value; OnPropertyChanged(); } }
+        private Color borderColor = Color.Black;
+        public Color BorderColor { get => borderColor; set { borderColor = value; OnPropertyChanged(); } }
+        private float pixelOffsetX = 0;
+        public float PixelOffsetX { get => pixelOffsetX; set { pixelOffsetX = value; OnPropertyChanged(); } }
+        private float pixelOffsetY = 0;
+        public float PixelOffsetY { get => pixelOffsetY; set { pixelOffsetY = value; OnPropertyChanged(); } }
+
+        private RectangleF lastRenderRectangleCoordinates;
         private double DeltaCX = 0;
         private double DeltaCY = 0;
 
@@ -96,7 +127,7 @@ namespace ScottPlot.Plottable
                 PointF pointA = new(xA, yA);
                 PointF pointC = new(xC, yC);
 
-                LastRenderRectangleCoordinates = RectangleF.FromLTRB(
+                lastRenderRectangleCoordinates = RectangleF.FromLTRB(
                     left: (float)dims.GetCoordinateX(pointA.X),
                     top: (float)dims.GetCoordinateY(pointC.Y),
                     right: (float)dims.GetCoordinateX(pointC.X),
@@ -104,40 +135,48 @@ namespace ScottPlot.Plottable
             }
         }
 
+        private bool dragEnabled = false;
         /// <summary>
         /// Indicates whether this marker is draggable in user controls.
         /// </summary>
-        public bool DragEnabled { get; set; } = false;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
 
+        private Cursor dragCursor = Cursor.Hand;
         /// <summary>
         /// Cursor to display while hovering over this marker if dragging is enabled.
         /// </summary>
-        public Cursor DragCursor { get; set; } = Cursor.Hand;
+        public Cursor DragCursor { get => dragCursor; set { dragCursor = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more negative than this position
         /// </summary>
-        public double DragXLimitMin = double.NegativeInfinity;
+        public double DragXLimitMin { get => dragXLimitMin; set { dragXLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more positive than this position
         /// </summary>
-        public double DragXLimitMax = double.PositiveInfinity;
+        public double DragXLimitMax { get => dragXLimitMax; set { dragXLimitMax = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more negative than this position
         /// </summary>
-        public double DragYLimitMin = double.NegativeInfinity;
+        public double DragYLimitMin { get => dragYLimitMin; set { dragYLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the marker cannot be dragged more positive than this position
         /// </summary>
-        public double DragYLimitMax = double.PositiveInfinity;
+        public double DragYLimitMax { get => dragYLimitMax; set { dragYLimitMax = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This event is invoked after the marker is dragged
         /// </summary>
         public event EventHandler Dragged = delegate { };
+
+        public Text() { Font = new Drawing.Font(); }
 
         /// <summary>
         /// Move the marker to a new coordinate in plot space.
@@ -171,7 +210,7 @@ namespace ScottPlot.Plottable
         {
             PointF pt = new((float)coordinateX, (float)coordinateY);
 
-            if (IsPointInsideRectangle(pt, LastRenderRectangleCoordinates))
+            if (IsPointInsideRectangle(pt, lastRenderRectangleCoordinates))
             {
                 DeltaCX = X - coordinateX;
                 DeltaCY = Y - coordinateY;

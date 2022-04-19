@@ -43,6 +43,7 @@ namespace ScottPlot.Demo.WPF
         private void MultiAxisLock(object sender, RoutedEventArgs e) => new ScottPlot.Demo.WPF.WpfDemos.MultiAxisLock().ShowDialog();
         private void StyleBrowser(object sender, RoutedEventArgs e) => new ScottPlot.Demo.WPF.WpfDemos.StyleBrowser().ShowDialog();
         private void DisplayScaling(object sender, RoutedEventArgs e) => new ScottPlot.Demo.WPF.WpfDemos.DisplayScaling().ShowDialog();
+        private void LaunchMVVM(object sender, RoutedEventArgs e) => new ScottPlot.Demo.WPF.WpfDemos.MVVMTest().ShowDialog();
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {

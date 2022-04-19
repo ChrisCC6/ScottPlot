@@ -7,45 +7,62 @@ namespace ScottPlot.Plottable
     /// <summary>
     /// This class describes a single item that appears in the figure legend.
     /// </summary>
-    public class LegendItem
+    public class LegendItem : PropertyNotifier
     {
-        public string label;
-        public Color color;
-        public Color hatchColor;
-        public Color borderColor;
-        public float borderWith;
-        public LineStyle borderLineStyle;
+        private string label { get; set; } = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
-        public LineStyle lineStyle;
+        private Color color;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
 
-        private double _lineWidth = 0;
-        public double lineWidth
+        private Color hatchColor;
+        public Color HatchColor { get => hatchColor; set { hatchColor = value; OnPropertyChanged(); } }
+
+        private Color borderColor;
+        public Color BorderColor { get => borderColor; set { borderColor = value; OnPropertyChanged(); } }
+
+        private float borderWith;
+        public float BorderWith { get => borderWith; set { borderWith = value; OnPropertyChanged(); } }
+
+        private LineStyle borderLineStyle = LineStyle.Solid;
+        public LineStyle BorderLineStyle { get => borderLineStyle; set { borderLineStyle = value; OnPropertyChanged(); } }
+
+        private LineStyle lineStyle = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
+
+        private double lineWidth = 0;
+        public double LineWidth
         {
-            get => (Parent is IHasLine parent) ? Math.Min(parent.LineWidth, 10) : _lineWidth;
-            set { _lineWidth = value; }
+            get => (Parent is IHasLine parent) ? Math.Min(parent.LineWidth, 10) : lineWidth;
+            set { lineWidth = value; OnPropertyChanged(); }
         }
+
         public Color LineColor => Parent is IHasLine p ? p.LineColor : color;
 
-        public MarkerShape markerShape;
-        private float _markerSize = 0;
-        public float markerSize
+        private MarkerShape markerShape;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
+
+        private float markerSize = 0;
+        public float MarkerSize
         {
-            get => (Parent is IHasMarker parent) ? parent.MarkerSize : _markerSize;
-            set { _markerSize = value; }
+            get => (Parent is IHasMarker parent) ? parent.MarkerSize : markerSize;
+            set { markerSize = value; OnPropertyChanged(); }
         }
 
-        public float markerLineWidth =>
-            Parent is IHasMarker parent ? Math.Min(parent.MarkerLineWidth, 3) : (float)lineWidth;
+        public float MarkerLineWidth =>
+            Parent is IHasMarker parent ? Math.Min(parent.MarkerLineWidth, 3) : (float)LineWidth;
 
         public Color MarkerColor =>
             Parent is IHasMarker parent ? parent.MarkerColor : color;
 
-        public HatchStyle hatchStyle;
+        private HatchStyle hatchStyle;
+        public HatchStyle HatchStyle { get => hatchStyle; set { hatchStyle = value; OnPropertyChanged(); } }
+
         public bool ShowAsRectangleInLegend
         {
             get
             {
-                bool hasVeryLargeLineWidth = lineWidth >= 10;
+                bool hasVeryLargeLineWidth = LineWidth >= 10;
                 bool hasArea = (Parent is not null) && (Parent is IHasArea);
                 return hasVeryLargeLineWidth || hasArea;
             }

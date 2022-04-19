@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -7,47 +8,55 @@ using System.Threading.Tasks;
 
 namespace ScottPlot.Renderable
 {
-    public class ArrowStyle
+    public class ArrowStyle : PropertyNotifier, INotifyPropertyChanged
     {
+        private ArrowAnchor anchor = ArrowAnchor.Center;
         /// <summary>
         /// Describes which part of the vector line will be placed at the data coordinates.
         /// </summary>
-        public ArrowAnchor Anchor = ArrowAnchor.Center;
+        public ArrowAnchor Anchor { get => anchor; set { anchor = value; OnPropertyChanged(); } }
 
+        private bool scaledArrowheads;
         /// <summary>
         /// If enabled arrowheads will be drawn as lines scaled to each vector's magnitude.
         /// </summary>
-        public bool ScaledArrowheads;
+        public bool ScaledArrowheads { get => scaledArrowheads; set { scaledArrowheads = value; OnPropertyChanged(); } }
 
+        private double scaledArrowheadWidth = 0.15;
         /// <summary>
         /// When using scaled arrowheads this defines the width of the arrow relative to the vector line's length.
         /// </summary>
-        public double ScaledArrowheadWidth = 0.15;
+        public double ScaledArrowheadWidth { get => scaledArrowheadWidth; set { scaledArrowheadWidth = value; OnPropertyChanged(); } }
 
+        private double scaledArrowheadLength = 0.5;
         /// <summary>
         /// When using scaled arrowheads this defines length of the arrowhead relative to the vector line's length.
         /// </summary>
-        public double ScaledArrowheadLength = 0.5;
+        public double ScaledArrowheadLength { get => scaledArrowheadLength; set { scaledArrowheadLength = value; OnPropertyChanged(); } }
 
+        private float nonScaledArrowheadWidth = 2;
         /// <summary>
         /// Size of the arrowhead if custom/scaled arrowheads are not in use
         /// </summary>
-        public float NonScaledArrowheadWidth = 2;
+        public float NonScaledArrowheadWidth { get => nonScaledArrowheadWidth; set { nonScaledArrowheadWidth = value; OnPropertyChanged(); } }
 
+        private float nonScaledArrowheadLength = 2;
         /// <summary>
         /// Size of the arrowhead if custom/scaled arrowheads are not in use
         /// </summary>
-        public float NonScaledArrowheadLength = 2;
+        public float NonScaledArrowheadLength { get => nonScaledArrowheadLength; set { nonScaledArrowheadLength = value; OnPropertyChanged(); } }
 
+        private MarkerShape markerShape = MarkerShape.filledCircle;
         /// <summary>
         /// Marker drawn at each coordinate
         /// </summary>
-        public MarkerShape MarkerShape = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
 
+        private float markerSize = 0;
         /// <summary>
         /// Size of markers to be drawn at each coordinate
         /// </summary>
-        public float MarkerSize = 0;
+        public float MarkerSize { get => markerSize; set { markerSize = value; OnPropertyChanged(); } }
 
         public (float tipScale, float headAngle) GetTipDimensions()
         {

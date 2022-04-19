@@ -1,27 +1,32 @@
 ﻿using ScottPlot.Plottable;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
 namespace ScottPlot
 {
-    public partial class Plot
+    public partial class Plot: PropertyNotifier, INotifyPropertyChanged
     {
         /// <summary>
         /// The settings object stores all state (configuration and data) for a plot
         /// </summary>
         private readonly Settings settings = new Settings();
+        public Settings Settings
+        { 
+            get { return settings; }
+        }
 
         /// <summary>
         /// Plot image width (pixels)
         /// </summary>
-        public float Width { get => settings.Width; set => Resize(value, settings.Height); }
+        public float Width { get => settings.Width; set { Resize(value, settings.Height); OnPropertyChanged(); } }
 
         /// <summary>
         /// Plot image height (pixels)
         /// </summary>
-        public float Height { get => settings.Height; set => Resize(settings.Width, value); }
+        public float Height { get => settings.Height; set { Resize(settings.Width, value); OnPropertyChanged(); } }
 
         /// <summary>
         /// A ScottPlot stores data in plottable objects and draws it on a bitmap when Render() is called
@@ -232,8 +237,11 @@ namespace ScottPlot
         public Drawing.Palette Palette
         {
             get => settings.PlottablePalette;
-            set => settings.PlottablePalette = value ?? throw new ArgumentNullException();
+            set { settings.PlottablePalette = value ?? throw new ArgumentNullException(); OnPropertyChanged(); }
         }
+
+        private Styles.IStyle plotStyle;
+        public Styles.IStyle PlotStyle { get => plotStyle; set { plotStyle = value; Style(plotStyle); OnPropertyChanged(); } }
 
         /// <summary>
         /// Set the colors and fonts of many plot components at once using a predefined theme

@@ -1,41 +1,64 @@
 ﻿using ScottPlot.Drawing;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 
 namespace ScottPlot.Plottable
 {
-    public abstract class AxisSpan : IPlottable, IDraggable, IHasColor, IHasArea
+    public abstract class AxisSpan : PropertyNotifier, IPlottable, IDraggable, IHasColor, IHasArea, ISelectable
     {
         // location and orientation
-        protected double Position1;
-        protected double Position2;
-        private double Min { get => Math.Min(Position1, Position2); }
-        private double Max { get => Math.Max(Position1, Position2); }
+        private double position1;
+        protected double Start { get => position1;
+            set { position1 = value; OnPropertyChanged();} }
+        private double position2;
+        protected double End { get => position2;
+            set { position2 = value; OnPropertyChanged();} }
+
+        private double Min { get => Math.Min(Start, End); }
+        private double Max { get => Math.Max(Start, End); }
         readonly bool IsHorizontal;
 
+        private bool ignoreAxisAuto = false;
         /// <summary>
         /// If true, AxisAuto() will ignore the position of this span when determining axis limits
         /// </summary>
-        public bool IgnoreAxisAuto = false;
+        public bool IgnoreAxisAuto { get => ignoreAxisAuto; set { ignoreAxisAuto = value; OnPropertyChanged(); } }
 
         // configuration
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public bool IsVisible { get; set; } = true;
-        public Color Color { get; set; } = Color.FromArgb(128, Color.Magenta);
-        public Color BorderColor { get; set; } = Color.Transparent;
-        public float BorderLineWidth { get; set; } = 0;
-        public LineStyle BorderLineStyle { get; set; } = LineStyle.None;
-        public Color HatchColor { get; set; } = Color.Transparent;
-        public HatchStyle HatchStyle { get; set; } = Drawing.HatchStyle.None;
-        public string Label;
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private Color color = Color.FromArgb(128, Color.Magenta);
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+        private Color borderColor = Color.Transparent;
+        public Color BorderColor { get => borderColor; set { borderColor = value; OnPropertyChanged(); } }
+        private float borderLineWidth = 0;
+        public float BorderLineWidth { get => borderLineWidth; set { borderLineWidth = value; OnPropertyChanged(); } }
+        private LineStyle borderLineStyle = LineStyle.None;
+        public LineStyle BorderLineStyle { get => borderLineStyle; set { borderLineStyle = value; OnPropertyChanged(); } }
+        private Color hatchColor = Color.Transparent;
+        public Color HatchColor { get => hatchColor; set { hatchColor = value; OnPropertyChanged(); } }
+        private HatchStyle hatchStyle = Drawing.HatchStyle.None;
+        public HatchStyle HatchStyle { get => hatchStyle; set { hatchStyle = value; OnPropertyChanged(); } }
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
         // mouse interaction
-        public bool DragEnabled { get; set; }
-        public bool DragFixedSize { get; set; }
-        public double DragLimitMin = double.NegativeInfinity;
-        public double DragLimitMax = double.PositiveInfinity;
+        private bool dragEnabled;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
+        private bool dragFixedSize;
+        public bool DragFixedSize { get => dragFixedSize; set { dragFixedSize = value; OnPropertyChanged(); } }
+        private double dragLimitMin = double.NegativeInfinity;
+        public double DragLimitMin { get => dragLimitMin; set { dragLimitMin = value; OnPropertyChanged(); } }
+        private double dragLimitMax = double.PositiveInfinity;
+        public double DragLimitMax { get => dragLimitMax; set { dragLimitMax = value; OnPropertyChanged(); } }
+
         public Cursor DragCursor => IsHorizontal ? Cursor.WE : Cursor.NS;
 
         /// <summary>
@@ -50,10 +73,10 @@ namespace ScottPlot.Plottable
 
         public void ValidateData(bool deep = false)
         {
-            if (double.IsNaN(Position1) || double.IsInfinity(Position1))
+            if (double.IsNaN(Start) || double.IsInfinity(Start))
                 throw new InvalidOperationException("position1 must be a valid number");
 
-            if (double.IsNaN(Position2) || double.IsInfinity(Position2))
+            if (double.IsNaN(End) || double.IsInfinity(End))
                 throw new InvalidOperationException("position2 must be a valid number");
         }
 
@@ -61,13 +84,13 @@ namespace ScottPlot.Plottable
         {
             var singleItem = new LegendItem(this)
             {
-                label = Label,
-                color = Color,
-                borderWith = Math.Min(BorderLineWidth, 3),
-                borderColor = BorderColor,
-                borderLineStyle = BorderLineStyle,
-                hatchColor = HatchColor,
-                hatchStyle = HatchStyle,
+                Label = this.Label,
+                Color = this.Color,
+                BorderWith = Math.Min(BorderLineWidth, 3),
+                BorderColor = this.BorderColor,
+                BorderLineStyle = this.BorderLineStyle,
+                HatchColor = this.HatchColor,
+                HatchStyle = this.HatchStyle,
             };
             return new LegendItem[] { singleItem };
         }
@@ -98,18 +121,18 @@ namespace ScottPlot.Plottable
         {
             if (IsHorizontal)
             {
-                if (Math.Abs(Position1 - coordinateX) <= snapX)
+                if (Math.Abs(Start - coordinateX) <= snapX)
                     edgeUnderMouse = Edge.Edge1;
-                else if (Math.Abs(Position2 - coordinateX) <= snapX)
+                else if (Math.Abs(End - coordinateX) <= snapX)
                     edgeUnderMouse = Edge.Edge2;
                 else
                     edgeUnderMouse = Edge.Neither;
             }
             else
             {
-                if (Math.Abs(Position1 - coordinateY) <= snapY)
+                if (Math.Abs(Start - coordinateY) <= snapY)
                     edgeUnderMouse = Edge.Edge1;
-                else if (Math.Abs(Position2 - coordinateY) <= snapY)
+                else if (Math.Abs(End - coordinateY) <= snapY)
                     edgeUnderMouse = Edge.Edge2;
                 else
                     edgeUnderMouse = Edge.Neither;
@@ -140,18 +163,18 @@ namespace ScottPlot.Plottable
                 coordinateY = Math.Min(coordinateY, DragLimitMax);
             }
 
-            double sizeBeforeDrag = Position2 - Position1;
+            double sizeBeforeDrag = End - Start;
             if (edgeUnderMouse == Edge.Edge1)
             {
-                Position1 = IsHorizontal ? coordinateX : coordinateY;
+                Start = IsHorizontal ? coordinateX : coordinateY;
                 if (DragFixedSize || fixedSize)
-                    Position2 = Position1 + sizeBeforeDrag;
+                    End = Start + sizeBeforeDrag;
             }
             else if (edgeUnderMouse == Edge.Edge2)
             {
-                Position2 = IsHorizontal ? coordinateX : coordinateY;
+                End = IsHorizontal ? coordinateX : coordinateY;
                 if (DragFixedSize || fixedSize)
-                    Position1 = Position2 - sizeBeforeDrag;
+                    Start = End - sizeBeforeDrag;
             }
             else
             {
@@ -159,17 +182,17 @@ namespace ScottPlot.Plottable
             }
 
             // ensure fixed-width spans stay entirely inside the allowable range
-            double belowLimit = DragLimitMin - Position1;
-            double aboveLimit = Position2 - DragLimitMax;
+            double belowLimit = DragLimitMin - Start;
+            double aboveLimit = End - DragLimitMax;
             if (belowLimit > 0)
             {
-                Position1 += belowLimit;
-                Position2 += belowLimit;
+                Start += belowLimit;
+                End += belowLimit;
             }
             if (aboveLimit > 0)
             {
-                Position1 -= aboveLimit;
-                Position2 -= aboveLimit;
+                Start -= aboveLimit;
+                End -= aboveLimit;
             }
 
             Dragged(this, EventArgs.Empty);

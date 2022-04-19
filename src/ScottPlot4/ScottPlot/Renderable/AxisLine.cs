@@ -6,13 +6,22 @@ using System.Text;
 
 namespace ScottPlot.Renderable
 {
-    public class AxisLine : IRenderable
+    public class AxisLine : PropertyNotifier, IRenderable
     {
-        public bool IsVisible { get; set; } = true;
-        public Color Color = Color.Black;
-        public float Width = 1;
-        public Edge Edge;
-        public float PixelOffset;
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private Color color = Color.Black;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+
+        private float width = 1;
+        public float Width { get => width; set { width = value; OnPropertyChanged(); } }
+
+        private Edge edge;
+        public Edge Edge { get => edge; set { edge = value; OnPropertyChanged(); } }
+
+        private float pixelOffset;
+        public float PixelOffset { get => pixelOffset; set { pixelOffset = value; OnPropertyChanged(); } }
 
         public void Render(PlotDimensions dims, Bitmap bmp, bool lowQuality = false)
         {

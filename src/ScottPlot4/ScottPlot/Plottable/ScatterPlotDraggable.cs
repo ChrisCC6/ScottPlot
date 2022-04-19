@@ -8,49 +8,62 @@ namespace ScottPlot.Plottable
     /// </summary>
     public class ScatterPlotDraggable : ScatterPlot, IDraggable
     {
-        public new double[] Xs { get; private set; }
-        public new double[] Ys { get; private set; }
-        public int CurrentIndex { get; set; } = 0;
+        // Remark: obsolete as base class setter changed from private to protected attribute
+        //private double[] xs;
+        //public new double[] Xs { get => xs; private set { xs = value; OnPropertyChanged(); } }
+        //private double[] ys;
+        //public new double[] Ys { get => ys; private set { ys = value; OnPropertyChanged(); OnPropertyChanged(nameof(PointCount)); } }
 
+        private int currentIndex = 0;
+        public int CurrentIndex { get => currentIndex; set { currentIndex = value; OnPropertyChanged(); } }
+
+        private bool dragEnabled = false;
         /// <summary>
         /// Indicates whether scatter points are draggable in user controls.
         /// </summary>
-        public bool DragEnabled { get; set; } = false;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
 
+        private bool dragEnabledX = true;
         /// <summary>
         /// Indicates whether scatter points are horizontally draggable in user controls.
         /// </summary>
-        public bool DragEnabledX { get; set; } = true;
+        public bool DragEnabledX { get => dragEnabledX; set { dragEnabledX = value; OnPropertyChanged(); } }
 
+        private bool dragEnabledY = true;
         /// <summary>
         /// Indicates whether scatter points are vertically draggable in user controls.
         /// </summary>
-        public bool DragEnabledY { get; set; } = true;
+        public bool DragEnabledY { get => dragEnabledY; set { dragEnabledY = value; OnPropertyChanged(); } }
 
+        private ScottPlot.Cursor dragCursor = ScottPlot.Cursor.Crosshair;
         /// <summary>
         /// Cursor to display while hovering over the scatter points if dragging is enabled.
         /// </summary>
-        public ScottPlot.Cursor DragCursor { get; set; } = ScottPlot.Cursor.Crosshair;
+        public ScottPlot.Cursor DragCursor { get => dragCursor; set { dragCursor = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the points cannot be dragged more negative than this position
         /// </summary>
-        public double DragXLimitMin = double.NegativeInfinity;
+        public double DragXLimitMin { get => dragXLimitMin; set { dragXLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragXLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the points cannot be dragged more positive than this position
         /// </summary>
-        public double DragXLimitMax = double.PositiveInfinity;
+        public double DragXLimitMax { get => dragXLimitMax; set { dragXLimitMax = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the points cannot be dragged more negative than this position
         /// </summary>
-        public double DragYLimitMin = double.NegativeInfinity;
+        public double DragYLimitMin { get => dragYLimitMin; set { dragYLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragYLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the points cannot be dragged more positive than this position
         /// </summary>
-        public double DragYLimitMax = double.PositiveInfinity;
+        public double DragYLimitMax { get => dragYLimitMax; set { dragYLimitMax = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This event is invoked after the plot is dragged
@@ -87,7 +100,7 @@ namespace ScottPlot.Plottable
         /// <param name="snapX">snap distance (pixels)</param>
         /// <param name="snapY">snap distance (pixels)</param>
         /// <returns></returns>
-        public bool IsUnderMouse(double coordinateX, double coordinateY, double snapX, double snapY)
+        public new bool IsUnderMouse(double coordinateX, double coordinateY, double snapX, double snapY)
         {
             bool test = false;
             for (int i = 0; i < PointCount; i++)

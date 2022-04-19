@@ -2,44 +2,69 @@
 using System;
 using System.Linq;
 using System.Drawing;
+using System.ComponentModel;
 
 namespace ScottPlot.Plottable
 {
-    public abstract class AxisLineVector : IPlottable, IDraggable, IHasLine, IHasColor
+    public abstract class AxisLineVector : PropertyNotifier, IPlottable, IDraggable, IHasLine, IHasColor
     {
+        private double[] positions;
         /// <summary>
         /// Location of the line (Y position if horizontal line, X position if vertical line)
         /// </summary>
-        protected double[] Positions;
-        public int CurrentIndex { get; set; } = 0;
-
-        /// <summary>
-        /// Add this value to each datapoint value before plotting (axis units)
-        /// </summary>
-        protected int Offset = 0;
+        protected double[] Positions { get => positions; set { positions = value; OnPropertyChanged(); OnPropertyChanged(nameof(PointCount)); } }
 
         public int PointCount => Positions.Length;
 
+        private int currentIndex = 0;
+        public int CurrentIndex { get => currentIndex; set { currentIndex = value; OnPropertyChanged(); } }
+
+        private int offset = 0;
+        /// <summary>
+        /// Add this value to each datapoint value before plotting (axis units)
+        /// </summary>
+        protected int Offset { get => offset; set { offset = value; OnPropertyChanged(); } }
+
+        private bool positionLabel = false;
         /// <summary>
         /// If True, the position will be labeled on the axis using the PositionFormatter
         /// </summary>
-        public bool PositionLabel = false;
+        public bool PositionLabel { get => positionLabel; set { positionLabel = value; OnPropertyChanged(); } }
 
+        private ScottPlot.Drawing.Font positionLabelFont;
         /// <summary>
         /// Font to use for position labels (labels drawn over the axis)
         /// </summary>
         //public Drawing.Font PositionLabelFont = new(){ Color = Color.White, Bold = true };
-        public ScottPlot.Drawing.Font PositionLabelFont = new ScottPlot.Drawing.Font() { Color = Color.White, Bold = true };
+        public ScottPlot.Drawing.Font PositionLabelFont { 
+            get => positionLabelFont; 
+            set 
+            { 
+                if (positionLabelFont != null)
+                    positionLabelFont.PropertyChanged -= Internal_PropertyChanged;
+                positionLabelFont = value;
+                if (positionLabelFont != null)
+                    positionLabelFont.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            } 
+        }
 
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {            
+            OnPropertyChanged(nameof(sender));
+        }
+
+        private Color positionLabelBackground = Color.Black;
         /// <summary>
         /// Color to use behind the position labels
         /// </summary>
-        public Color PositionLabelBackground = Color.Black;
+        public Color PositionLabelBackground { get => positionLabelBackground; set { positionLabelBackground = value; OnPropertyChanged(); } }
 
+        private bool positionLabelOppositeAxis = false;
         /// <summary>
         /// If true the position label will be drawn on the right or top of the data area.
         /// </summary>
-        public bool PositionLabelOppositeAxis = false;
+        public bool PositionLabelOppositeAxis { get => positionLabelOppositeAxis; set { positionLabelOppositeAxis = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This method generates the position label text for numeric (non-DateTime) axes.
@@ -48,73 +73,94 @@ namespace ScottPlot.Plottable
         public Func<double, string> PositionFormatter = position => position.ToString("F2");
 
         // customization
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
-        public Color Color { get; set; } = Color.Black;
-        public Color LineColor { get => Color; set { Color = value; } }
-        public LineStyle LineStyle { get; set; } = LineStyle.Solid;
-        public MarkerShape MarkerShape = MarkerShape.filledCircle;
-        public double LineWidth { get; set; } = 1;
-        public float ErrorLineWidth = 1;
-        public float ErrorCapSize = 3;
-        public float MarkerSize = 5;
-        public bool StepDisplay = false;
+        private Color color = Color.Black;
+        public Color Color { get => color; set { color = value; OnPropertyChanged(); } }
+        public Color LineColor { get => Color; set { Color = value; OnPropertyChanged(); } }
+        private LineStyle lineStyle = LineStyle.Solid;
+        public LineStyle LineStyle { get => lineStyle; set { lineStyle = value; OnPropertyChanged(); } }
+        private MarkerShape markerShape = MarkerShape.filledCircle;
+        public MarkerShape MarkerShape { get => markerShape; set { markerShape = value; OnPropertyChanged(); } }
+        private double lineWidth = 1;
+        public double LineWidth { get => lineWidth; set { lineWidth = value; OnPropertyChanged(); } }
+        private float errorLineWidth = 1;
+        public float ErrorLineWidth { get => errorLineWidth; set { errorLineWidth = value; OnPropertyChanged(); } }
+        private float errorCapSize = 3;
+        public float ErrorCapSize { get => errorCapSize; set { errorCapSize = value; OnPropertyChanged(); } }
+        private float markerSize = 5;
+        public float MarkerSize { get => markerSize; set { markerSize = value; OnPropertyChanged(); } }
+        private bool stepDisplay = false;
+        public bool StepDisplay { get => stepDisplay; set { stepDisplay = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// Indicates whether the line is horizontal (position in Y units) or vertical (position in X units)
         /// </summary>
-        private readonly bool IsHorizontal;
+        readonly private bool IsHorizontal;
 
+        private bool ignoreAxisAuto = false;
         /// <summary>
         /// If true, AxisAuto() will ignore the position of this line when determining axis limits
         /// </summary>
-        public bool IgnoreAxisAuto = false;
+        public bool IgnoreAxisAuto { get => ignoreAxisAuto; set { ignoreAxisAuto = value; OnPropertyChanged(); } }
 
+        private string label = string.Empty;
         /// <summary>
         /// Text that appears in the legend
         /// </summary>
-        public string Label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
 
+        private bool dragEnabled = false;
         /// <summary>
         /// Indicates whether this line is draggable in user controls.
         /// </summary>
-        public bool DragEnabled { get; set; } = false;
+        public bool DragEnabled { get => dragEnabled; set { dragEnabled = value; OnPropertyChanged(); } }
+
 
         /// <summary>
         /// Cursor to display while hovering over this line if dragging is enabled.
         /// </summary>
         public Cursor DragCursor => IsHorizontal ? Cursor.NS : Cursor.WE;
 
+        private double dragLimitMin = double.NegativeInfinity;
         /// <summary>
         /// If dragging is enabled the line cannot be dragged more negative than this position
         /// </summary>
-        public double DragLimitMin = double.NegativeInfinity;
+        public double DragLimitMin { get => dragLimitMin; set { dragLimitMin = value; OnPropertyChanged(); } }
 
+        private double dragLimitMax = double.PositiveInfinity;
         /// <summary>
         /// If dragging is enabled the line cannot be dragged more positive than this position
         /// </summary>
-        public double DragLimitMax = double.PositiveInfinity;
+        public double DragLimitMax { get => dragLimitMax; set { dragLimitMax = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// This event is invoked after the line is dragged
         /// </summary>
         public event EventHandler Dragged = delegate { };
 
+
+        private double min = double.NegativeInfinity;
         /// <summary>
         /// The lower bound of the axis line.
         /// </summary>
-        public double Min = double.NegativeInfinity;
+        public double Min { get => min; set { min = value; OnPropertyChanged(); } }
 
+        private double max = double.PositiveInfinity;
         /// <summary>
         /// The upper bound of the axis line.
         /// </summary>
-        public double Max = double.PositiveInfinity;
-
+        public double Max { get => max; set { max = value; OnPropertyChanged(); } }
+    
         public AxisLineVector(bool isHorizontal)
         {
             IsHorizontal = isHorizontal;
+            PositionLabelFont = new ScottPlot.Drawing.Font() { Color = Color.White, Bold = true };
         }
 
         public AxisLimits GetAxisLimits()
@@ -263,7 +309,7 @@ namespace ScottPlot.Plottable
                 if (coordinateX > DragLimitMax) coordinateX = DragLimitMax;
                 Positions[CurrentIndex] = coordinateX;
             }
-
+            OnPropertyChanged(nameof(Positions));
             Dragged(this, EventArgs.Empty);
         }
 
@@ -306,11 +352,11 @@ namespace ScottPlot.Plottable
         {
             var singleItem = new LegendItem(this)
             {
-                label = Label,
-                color = Color,
-                lineStyle = LineStyle,
-                lineWidth = LineWidth,
-                markerShape = MarkerShape.none
+                Label = this.Label,
+                Color = this.Color,
+                LineStyle = this.LineStyle,
+                LineWidth = this.LineWidth,
+                MarkerShape = MarkerShape.none
             };
             return new LegendItem[] { singleItem };
         }
@@ -324,9 +370,9 @@ namespace ScottPlot.Plottable
         /// <summary>
         /// X position to render the line
         /// </summary>
-        public double[] Xs { get => Positions; set => Positions = value; }
+        public double[] Xs { get => Positions; set { Positions = value; OnPropertyChanged(); } }
 
-        public int offset { get => Offset; set => Offset = value; }
+        public new int Offset { get => base.Offset; set { base.Offset = value; OnPropertyChanged(); } }
 
         public override string ToString() => $"{PointCount} lines positions X={Xs}, with an offset of {Offset}";
         public VLineVector() : base(false) { }
@@ -340,9 +386,9 @@ namespace ScottPlot.Plottable
         /// <summary>
         /// Y position to render the line
         /// </summary>
-        public double[] Ys { get => Positions; set => Positions = value; }
+        public double[] Ys { get => Positions; set { Positions = value; OnPropertyChanged(); } }
 
-        public int offset { get => Offset; set => Offset = value; }
+        public new int Offset { get => base.Offset; set { base.Offset = value; OnPropertyChanged(); } }
 
         public override string ToString() => $"{PointCount} lines positions Y={Ys}, with an offset of {Offset}";
         public HLineVector() : base(true) { }

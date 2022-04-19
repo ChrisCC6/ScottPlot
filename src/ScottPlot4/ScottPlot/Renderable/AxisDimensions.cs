@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace ScottPlot.Renderable
 {
@@ -7,7 +8,7 @@ namespace ScottPlot.Renderable
     /// Unlike PlotDimensions(immutable objects created just before rendering), 
     /// values in this class are intended for long term storage.
     /// </summary>
-    public class AxisDimensions
+    public class AxisDimensions: PropertyNotifier, INotifyPropertyChanged
     {
         /// <summary>
         /// Size of the entire figure (in pixels) if it were to be exported as an image

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ScottPlot.Ticks;
 using System.Linq;
+using System.ComponentModel;
 
 namespace ScottPlot.Plottable
 {
@@ -11,67 +12,94 @@ namespace ScottPlot.Plottable
     /// A colorbar translates numeric intensity values to colors.
     /// The Colorbar plot type displays a Colorbar along an edge of the plot.
     /// </summary>
-    public class Colorbar : IPlottable, IStylable
+    public class Colorbar : PropertyNotifier, IPlottable, IStylable
     {
         public Renderable.Edge Edge = Renderable.Edge.Right;
 
         private Colormap Colormap;
         private Bitmap BmpScale;
 
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get => 0; set { } }
-        public int YAxisIndex { get => 0; set { } }
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
 
+        private int width = 20;
         /// <summary>
         /// Width of the colorbar rectangle
         /// </summary>
-        public int Width = 20;
+        public int Width { get => width; set { width = value; OnPropertyChanged(); } }
 
-        public readonly Drawing.Font TickLabelFont = new();
-        public Color TickMarkColor = Color.Black;
-        public float TickMarkLength = 3;
-        public float TickMarkWidth = 1;
+        private Drawing.Font tickLabelFont;
+        public Drawing.Font TickLabelFont { 
+            get => tickLabelFont;
+            set 
+            {
+                if (tickLabelFont!=null)
+                    tickLabelFont.PropertyChanged -= Internal_PropertyChanged;
+                tickLabelFont = value;
+                if (tickLabelFont != null)
+                    tickLabelFont.PropertyChanged += Internal_PropertyChanged;
+                OnPropertyChanged();
+            }
+        }
+
+        private void Internal_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
+        }
+
+
+        private Color tickMarkColor = Color.Black;
+        public Color TickMarkColor { get => tickMarkColor; set { tickMarkColor = value; OnPropertyChanged(); } }
+        private float tickMarkLength = 3;
+        public float TickMarkLength { get => tickMarkLength; set { tickMarkLength = value; OnPropertyChanged(); } }
+        private float tickMarkWidth = 1;
+        public float TickMarkWidth { get => tickMarkWidth; set { tickMarkWidth = value; OnPropertyChanged(); } }
 
         private readonly List<Tick> ManualTicks = new();
         private bool AutomaticTickEnable = true;
         private int AutomaticTickMinimumSpacing = 40;
         private Func<double, string> AutomaticTickFormatter = position => $"{position:F2}";
 
-        public float DataAreaPadding = 10;
+        private float dataAreaPadding = 10;
+        public float DataAreaPadding { get => dataAreaPadding; set { dataAreaPadding = value; OnPropertyChanged(); } }
 
-        private double _MinValue = 0;
+        private double minValue = 0;
         public double MinValue
         {
-            get => (Plottable is IHasColormap p) ? p.ColormapMin : _MinValue;
-            set => _MinValue = value;
+            get => (Plottable is IHasColormap p) ? p.ColormapMin : minValue;
+            set { minValue = value; OnPropertyChanged(); }
         }
 
-        private double _MaxValue = 1;
+        private double maxValue = 1;
         public double MaxValue
         {
-            get => (Plottable is IHasColormap p) ? p.ColormapMax : _MaxValue;
-            set => _MaxValue = value;
+            get => (Plottable is IHasColormap p) ? p.ColormapMax : maxValue;
+            set { maxValue = value; OnPropertyChanged(); }
         }
 
-        private bool _MinIsClipped = false;
+        private bool minIsClipped = false;
         public bool MinIsClipped
         {
-            get => (Plottable is IHasColormap p) ? p.ColormapMinIsClipped : _MinIsClipped;
-            set => _MinIsClipped = value;
+            get => (Plottable is IHasColormap p) ? p.ColormapMinIsClipped : minIsClipped;
+            set { minIsClipped = value; OnPropertyChanged(); }
         }
 
-        private bool _MaxIsClipped = false;
+        private bool maxIsClipped = false;
         public bool MaxIsClipped
         {
-            get => (Plottable is IHasColormap p) ? p.ColormapMaxIsClipped : _MaxIsClipped;
-            set => _MaxIsClipped = value;
+            get => (Plottable is IHasColormap p) ? p.ColormapMaxIsClipped : maxIsClipped;
+            set { maxIsClipped = value; OnPropertyChanged(); }
         }
 
-        private double _MinColor = 0;
-        public double MinColor { get => _MinColor; set { _MinColor = value; UpdateBitmap(); } }
+        private double minColor = 0;
+        public double MinColor { get => minColor; set { minColor = value; UpdateBitmap(); OnPropertyChanged(); } }
 
-        private double _MaxColor = 1;
-        public double MaxColor { get => _MaxColor; set { _MaxColor = value; UpdateBitmap(); } }
+        private double maxColor = 1;
+        public double MaxColor { get => maxColor; set { maxColor = value; UpdateBitmap(); OnPropertyChanged(); } }
 
         /// <summary>
         /// If populated, this object holds the plottable containing the heatmap and value data this colorbar represents
@@ -81,12 +109,14 @@ namespace ScottPlot.Plottable
         public Colorbar(Colormap colormap = null)
         {
             UpdateColormap(colormap ?? Colormap.Viridis);
+            tickLabelFont = new();
         }
 
         public Colorbar(IHasColormap plottable)
         {
             Plottable = plottable;
             UpdateColormap(plottable.Colormap);
+            tickLabelFont = new();
         }
 
         public void SetStyle(Color? tickMarkColor, Color? tickFontColor)

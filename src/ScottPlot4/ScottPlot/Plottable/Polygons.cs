@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using ScottPlot.Drawing;
@@ -11,29 +13,70 @@ namespace ScottPlot.Plottable
     /// This plot type is faster alternative for rendering a large number of polygons
     /// compared to adding a bunch of individual Polygon objects to the plot.
     /// </summary>
-    public class Polygons : IPlottable, IHasColor
+    public class Polygons : PropertyNotifier, IPlottable, IHasColor
     {
         // data
-        public readonly List<List<(double x, double y)>> Polys;
+        public readonly ObservableCollection<List<(double x, double y)>> Polys;
 
         // customization
-        public string Label;
-        public double LineWidth;
-        public Color LineColor;
-        public bool Fill = true;
-        public Color FillColor;
-        public Color Color { get => FillColor; set { FillColor = value; } }
-        public bool IsVisible { get; set; } = true;
-        public int XAxisIndex { get; set; } = 0;
-        public int YAxisIndex { get; set; } = 0;
-        public Color HatchColor = Color.Transparent;
-        public HatchStyle HatchStyle = HatchStyle.None;
-        public bool SkipOffScreenPolygons = true;
-        public bool RenderSmallPolygonsAsSinglePixels = true;
+        private string label = string.Empty;
+        public string Label { get => label; set { label = value; OnPropertyChanged(); } }
+
+        private double lineWidth = 1;
+        public double LineWidth
+        {
+            get => IsHighlighted ? lineWidth * HighlightCoefficient : lineWidth;
+            set { lineWidth = value; OnPropertyChanged(); }
+        }
+
+        private bool isHighlighted = false;
+        public bool IsHighlighted { get => isHighlighted; set { isHighlighted = value; OnPropertyChanged(); } }
+        private float highlightCoefficient = 2;
+        public float HighlightCoefficient { get => highlightCoefficient; set { highlightCoefficient = value; OnPropertyChanged(); } }
+
+        private Color lineColor = Color.Black;
+        public Color LineColor { get => lineColor; set { lineColor = value; OnPropertyChanged(); } }
+
+        private bool fill = true;
+        public bool Fill { get => fill; set { fill = value; OnPropertyChanged(); } }
+        private Color fillColor = Color.Gray;
+        public Color FillColor { get => fillColor; set { fillColor = value; OnPropertyChanged(); } }
+        public Color Color { get => FillColor; set { FillColor = value; OnPropertyChanged(); } }
+
+        private int xAxisIndex = 0;
+        public int XAxisIndex { get => xAxisIndex; set { xAxisIndex = value; OnPropertyChanged(); } }
+
+        private int yAxisIndex = 0;
+        public int YAxisIndex { get => yAxisIndex; set { yAxisIndex = value; OnPropertyChanged(); } }
+
+        private bool isVisible = true;
+        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); } }
+
+        private Color hatchColor = Color.Transparent;
+        public Color HatchColor { get => hatchColor; set { hatchColor = value; OnPropertyChanged(); } }
+
+        private HatchStyle hatchStyle = HatchStyle.None;
+        public HatchStyle HatchStyle { get => hatchStyle; set { hatchStyle = value; OnPropertyChanged(); } }
+
+        private bool skipOffScreenPolygons = true;
+        public bool SkipOffScreenPolygons { get => skipOffScreenPolygons; set { skipOffScreenPolygons = value; OnPropertyChanged(); } }
+
+        private bool renderSmallPolygonsAsSinglePixels = true;
+        public bool RenderSmallPolygonsAsSinglePixels { get => renderSmallPolygonsAsSinglePixels; set { renderSmallPolygonsAsSinglePixels = value; OnPropertyChanged(); } }
 
         public Polygons(List<List<(double x, double y)>> polys)
         {
-            Polys = polys;
+            Polys = new ObservableCollection<List<(double x, double y)>>();
+            Polys.CollectionChanged += Polys_CollectionChanged;
+            foreach (var item in polys)
+            {
+                Polys.Add(item);
+            }
+        }
+
+        private void Polys_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(sender));
         }
 
         public override string ToString()
@@ -87,12 +130,12 @@ namespace ScottPlot.Plottable
         {
             var singleLegendItem = new LegendItem(this)
             {
-                label = Label,
-                color = Fill ? FillColor : LineColor,
-                lineWidth = Fill ? 10 : LineWidth,
-                markerShape = MarkerShape.none,
-                hatchColor = HatchColor,
-                hatchStyle = HatchStyle
+                Label = this.Label,
+                Color = Fill ? FillColor : LineColor,
+                LineWidth = Fill ? 10 : LineWidth,
+                MarkerShape = MarkerShape.none,
+                HatchColor = this.HatchColor,
+                HatchStyle = this.HatchStyle
             };
             return new LegendItem[] { singleLegendItem };
         }
