@@ -30,6 +30,7 @@ namespace ScottPlot
 
             Axis defaultTop = new();
             defaultTop.Edge = Edge.Top;
+            defaultTop.AxisIndex = 1;
             defaultTop.AxisTicks.MajorTickVisible = false;
             defaultTop.AxisTicks.TickLabelVisible = false;
             defaultTop.AxisTicks.MinorTickVisible = false;

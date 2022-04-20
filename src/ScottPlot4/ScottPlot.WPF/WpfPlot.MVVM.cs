@@ -22,7 +22,7 @@ namespace ScottPlot
         {
             if (d is WpfPlot chart)
             {
-                if (e.OldValue is ObservableCollection<IPlottable> olddatasources)
+                if (e.OldValue is PlottableCollection olddatasources)
                 {
                     olddatasources.CollectionChanged += chart.Plottables_CollectionChanged; ;
                     foreach (var seriesItem in olddatasources)
@@ -30,8 +30,9 @@ namespace ScottPlot
                         seriesItem.PropertyChanged -= chart.PlottablesItem_PropertyChanged;
                     }
                 }
-                if (e.NewValue is ObservableCollection<IPlottable> newdatasources)
+                if (e.NewValue is PlottableCollection newdatasources)
                 {
+                    chart.Plot.Settings.Plottables = newdatasources;
                     newdatasources.CollectionChanged += chart.Plottables_CollectionChanged;
                     foreach (var seriesItem in newdatasources)
                     {
@@ -61,7 +62,6 @@ namespace ScottPlot
                     Plottables_Replace(e);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                    Plottables_Move(e);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                     Plottables_Reset(e);
@@ -77,24 +77,15 @@ namespace ScottPlot
             foreach (IPlottable item in e.NewItems)
             {
                 item.PropertyChanged += PlottablesItem_PropertyChanged;
-                Plot.Add(item);
             }
         }
 
         private void Plottables_Remove(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            foreach (IPlottable item in e.NewItems)
+            foreach (IPlottable item in e.OldItems)
             {
                 item.PropertyChanged -= PlottablesItem_PropertyChanged;
-                Plot.Remove(item);
             }
-
-        }
-
-        private void Plottables_Move(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            foreach (IPlottable item in e.NewItems)
-                Plot.Move(e.OldStartingIndex, e.NewStartingIndex);
         }
 
         private void Plottables_Reset(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -102,13 +93,19 @@ namespace ScottPlot
             foreach (IPlottable item in Plot.GetPlottables())
             {
                 item.PropertyChanged -= PlottablesItem_PropertyChanged;
-                Plot.Remove(item);
             }
         }
 
         private void Plottables_Replace(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            foreach (IPlottable item in e.OldItems)
+            {
+                item.PropertyChanged -= PlottablesItem_PropertyChanged;
+            }
+            foreach (IPlottable item in e.NewItems)
+            {
+                item.PropertyChanged += PlottablesItem_PropertyChanged;
+            }
         }
 
         #endregion
@@ -125,7 +122,7 @@ namespace ScottPlot
         {
             if (d is WpfPlot chart)
             {
-                if (e.OldValue is ObservableCollection<Axis> olddatasources)
+                if (e.OldValue is AxisCollection olddatasources)
                 {
                     olddatasources.CollectionChanged += chart.Axes_CollectionChanged; ;
                     foreach (var seriesItem in olddatasources)
@@ -133,8 +130,9 @@ namespace ScottPlot
                         seriesItem.PropertyChanged -= chart.AxesItem_PropertyChanged;
                     }
                 }
-                if (e.NewValue is ObservableCollection<Axis> newdatasources)
+                if (e.NewValue is AxisCollection newdatasources)
                 {
+                    chart.Plot.Settings.Axes = newdatasources;
                     newdatasources.CollectionChanged += chart.Axes_CollectionChanged;
                     foreach (var seriesItem in newdatasources)
                     {
@@ -179,40 +177,38 @@ namespace ScottPlot
         {
             foreach (Axis item in e.NewItems)
             {
-                Plot.Settings.Axes.Add(item);
                 item.PropertyChanged += AxesItem_PropertyChanged;
             }
         }
 
         private void Axes_Remove(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            foreach (Axis item in e.NewItems)
+            foreach (Axis item in e.OldItems)
             {
                 item.PropertyChanged -= AxesItem_PropertyChanged;
-                Plot.Settings.Axes.Remove(item);
             }
         }
 
         private void Axes_Move(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             throw new NotImplementedException();
-            //foreach (Axis item in e.NewItems)
-            //    Plot.Move(e.OldStartingIndex, e.NewStartingIndex);
         }
 
         private void Axes_Reset(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             throw new NotImplementedException();
-            //foreach (IPlottable item in Plot.GetPlottables())
-            //{
-            //    item.PropertyChanged -= SeriesItem_PropertyChanged;
-            //    Plot.Remove(item);
-            //}
         }
 
         private void Axes_Replace(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            foreach (Axis item in e.OldItems)
+            {
+                item.PropertyChanged -= AxesItem_PropertyChanged;
+            }
+            foreach (Axis item in e.NewItems)
+            {
+                item.PropertyChanged += AxesItem_PropertyChanged;
+            }
         }
 
         #endregion
@@ -252,14 +248,15 @@ namespace ScottPlot
         }));
         #endregion
 
+        #region Selection
 
         public object SelectedObject
         {
             get { return GetValue(SelectedObjectProperty); }
-            set {
+            set
+            {
                 object oldValue = GetValue(SelectedObjectProperty);
                 SetValue(SelectedObjectProperty, value);
-                //OnPropertyChanged(new DependencyPropertyChangedEventArgs(SelectedObjectProperty, oldValue, value));
             }
         }
         public static readonly DependencyProperty SelectedObjectProperty = DependencyProperty.Register(nameof(SelectedObject), typeof(object), typeof(WpfPlot), new PropertyMetadata((d, e) =>
@@ -268,8 +265,6 @@ namespace ScottPlot
             {
             }
         }));
-
-
 
         private const double MouseCaptureDistance = 5;
         private void OnMouseClick(object sender, MouseButtonEventArgs e)
@@ -285,10 +280,10 @@ namespace ScottPlot
                     return;
                 }
             }
-   
+
             foreach (ISelectable item in PlottablesSource.ByType(typeof(ISelectable)))
             {
-                (double mouseCoordX, double mouseCoordY) = Plot.GetCoordinate(mouseX, mouseY, 0, 0); // these are the numeric values
+                (double mouseCoordX, double mouseCoordY) = Plot.GetCoordinate(mouseX, mouseY, 0, 0);
                 double xUnitsPerPx = Plot.Settings.GetXAxis(0).Dims.UnitsPerPx;
                 double yUnitsPerPx = Plot.Settings.GetYAxis(0).Dims.UnitsPerPx;
 
@@ -304,7 +299,7 @@ namespace ScottPlot
             foreach (ISelectable2DSeries item in PlottablesSource.ByType(typeof(ISelectable2DSeries)))
             {
                 if (item == null) continue;
-                (double mouseCoordX, double mouseCoordY) = Plot.GetCoordinate(mouseX, mouseY, item.XAxisIndex, item.YAxisIndex); // these are the numeric values
+                (double mouseCoordX, double mouseCoordY) = Plot.GetCoordinate(mouseX, mouseY, item.XAxisIndex, item.YAxisIndex);
                 double xUnitsPerPx = Plot.Settings.GetXAxis(item.XAxisIndex).Dims.UnitsPerPx;
                 double yUnitsPerPx = Plot.Settings.GetYAxis(item.YAxisIndex).Dims.UnitsPerPx;
 
@@ -318,28 +313,10 @@ namespace ScottPlot
                 }
             }
 
-
-
-
-
-
             SelectedObject = null;
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        #endregion
 
     }
 }

@@ -47,9 +47,19 @@ namespace ScottPlot.Renderable
         /// </summary>
         public int AxisIndex { get => axisIndex; set { axisIndex = value; OnPropertyChanged(); } }
 
-
         private bool isVisible = true;
-        public bool IsVisible { get => isVisible; set { isVisible = value; OnPropertyChanged(); OnPropertyChanged(nameof(Size)); } }
+        /// <summary>
+        /// false if axes are hidden
+        /// </summary>
+        public bool IsVisible { 
+            get => isVisible; 
+            set 
+            { 
+                isVisible = value;
+                OnPropertyChanged(); 
+                OnPropertyChanged(nameof(Size));
+            }
+        }
 
         private Edge _Edge;
         public Edge Edge
@@ -171,7 +181,6 @@ namespace ScottPlot.Renderable
         /// Size this axis to an exact number of pixels
         /// </summary>
         public void SetSizeLimit(float px) => SetSizeLimit(px, px, 0);
-
         
         /// <summary>
         /// how large this axis is PixelSize + PixelSizePadding
@@ -180,7 +189,7 @@ namespace ScottPlot.Renderable
         { 
             get 
             {
-                if (IsVisible == false || Collapsed)
+                if (!IsVisible)
                     return 0;
                 else
                     return PixelSize + PixelSizePadding;
@@ -209,11 +218,6 @@ namespace ScottPlot.Renderable
         /// </summary>
         public float PixelOffset { get => pixelOffset; set { pixelOffset = value; OnPropertyChanged(); } }
 
-        private bool collapsed = false;
-        /// <summary>
-        /// true if axes are hidden
-        /// </summary>
-        public bool Collapsed { get => collapsed; private set { collapsed = value; OnPropertyChanged(); OnPropertyChanged(nameof(Size)); } }
 
         private float PixelSizeMinimum = 5; // also defined in ResetLayout()
         private float PixelSizeMaximum = float.PositiveInfinity; // also defined in ResetLayout()
@@ -230,7 +234,7 @@ namespace ScottPlot.Renderable
         /// </summary>
         public float GetSize()
         {
-            if (IsVisible == false || Collapsed)
+            if (!IsVisible)
                 return 0;
             else
                 return PixelSize + PixelSizePadding;
@@ -617,12 +621,15 @@ namespace ScottPlot.Renderable
         public void Hide(bool hidden = true)
         {
             // NOTE: Don't set this.IsVisible because that will control the grid
+            // Remark: does this make sense, as long as the grid belongs to the axis?
+            // Only showing the grid can be done by setting every visibility to false except the grid
             AxisTicks.MajorTickVisible = !hidden;
             AxisTicks.MinorTickVisible = !hidden;
             AxisTicks.TickLabelVisible = !hidden;
             AxisLine.IsVisible = !hidden;
-            Collapsed = hidden;
+            isVisible = !hidden;
         }
+
 
         /// <summary>
         /// Set visibility for major tick grid lines
@@ -634,7 +641,7 @@ namespace ScottPlot.Renderable
         /// </summary>
         public void RecalculateAxisSize()
         {
-            if (Collapsed)
+            if (!isVisible)
             {
                 PixelSize = 0;
                 return;

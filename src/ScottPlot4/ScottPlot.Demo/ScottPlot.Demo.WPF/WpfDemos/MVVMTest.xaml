@@ -11,7 +11,7 @@
         xmlns:views="clr-namespace:WPF_Demo.WpfDemos.Views"        
         d:DataContext="{d:DesignInstance Type=local:MVVMTest}"
         mc:Ignorable="d"
-        Title="MVVM" Height="450" Width="1000">
+        Title="MVVM" Height="600" Width="1000">
     <Window.Resources>
         <converter:PlottableToStringConverter x:Key="PlottableToStringConverter"/>
         <converter:AxisToStringConverter x:Key="AxisToStringConverter"/>
@@ -35,30 +35,38 @@
         <DataTemplate DataType="{x:Type Plottable:VSpan}">
             <views:VSpanView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type Renderable:Axis}">
+            <views:AxisView />
+        </DataTemplate>
     </Window.Resources>
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="120">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="160">
             <StackPanel Margin="0, 0, 20, 0">
-                <ComboBox ItemsSource="{Binding PlotStyles}" SelectedItem="{Binding SelectedPlotStyle}" Width="100" Margin="5"/>
+                <TextBlock Text="PlotStyle" Width="100" Margin="5"/>
+                <ComboBox ItemsSource="{Binding PlotStyles}" SelectedItem="{Binding SelectedPlotStyle,UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="5"/>
             </StackPanel>
             <StackPanel Margin="0, 0, 20, 0">
-                <ComboBox ItemsSource="{Binding Plottables}" SelectedItem="{Binding SelectedObject,Converter={StaticResource SelectedObjectToPlottableConverter}}" Width="100" Margin="5">
+                <TextBlock Text="Plottables" Width="100" Margin="5"/>
+                <ComboBox ItemsSource="{Binding Plottables}" SelectedItem="{Binding SelectedObject,Converter={StaticResource SelectedObjectToPlottableConverter},UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="5">
                     <ComboBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type Plottable:IPlottable}">
                             <TextBlock Text="{Binding Converter={StaticResource PlottableToStringConverter},UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                
             </StackPanel>
             <StackPanel Margin="0, 0, 20, 0">
-                <ComboBox ItemsSource="{Binding Axes}" SelectedItem="{Binding SelectedObject,Converter={StaticResource SelectedObjectToAxisConverter}}" Width="100" Margin="5">
+                <TextBlock Text="Axes" Width="100" Margin="5"/>
+                <ComboBox ItemsSource="{Binding Axes}" SelectedItem="{Binding SelectedObject,Converter={StaticResource SelectedObjectToAxisConverter},UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="5">
                     <ComboBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type Renderable:Axis}">
                             <TextBlock Text="{Binding Converter={StaticResource AxisToStringConverter},UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+            </StackPanel>
+            <StackPanel Margin="0, 0, 20, 0">
+                <TextBlock Text="Properties" Width="100" Margin="5"/>
                 <ContentControl Content="{Binding SelectedObject}"/>
             </StackPanel>
         </StackPanel>

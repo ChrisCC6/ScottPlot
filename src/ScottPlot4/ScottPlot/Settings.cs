@@ -16,11 +16,23 @@ namespace ScottPlot
     /// </summary>
     public class Settings
     {
+        private PlottableCollection plottables = new();
         /// <summary>
         /// This List contains all plottables managed by this Plot.
         /// Render order is from lowest (first) to highest (last).
         /// </summary>
-        public readonly PlottableCollection Plottables = new();
+        public PlottableCollection Plottables
+        {
+            get => plottables;
+            set 
+            { 
+                if (plottables!=null)
+                    plottables.CollectionChanged -= (object sender, NotifyCollectionChangedEventArgs e) => PlottablesIdentifier++;
+                plottables = value;
+                if (plottables != null)
+                    plottables.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => PlottablesIdentifier++;
+            }
+        }
 
         /// <summary>
         /// Unique value that changes any time the list of plottables is modified.

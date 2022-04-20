@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="WPF_Demo.WpfDemos.Views.AxisView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+      xmlns:plottable="clr-namespace:ScottPlot.Plottable;assembly=ScottPlot"
+      xmlns:renderable="clr-namespace:ScottPlot.Renderable;assembly=ScottPlot"
+      xmlns:scottplot="clr-namespace:ScottPlot;assembly=ScottPlot"
+      xmlns:converter="clr-namespace:ScottPlot.Demo.WPF.Converter"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      d:DataContext="{d:DesignInstance Type=renderable:Axis}"
+      mc:Ignorable="d" 
+      d:DesignHeight="125" d:DesignWidth="300"
+      >
+    <UserControl.Resources>
+        <converter:ColorConverter x:Key="ColorConverter"/>
+        <converter:DoubleConverter x:Key="DoubleConverter"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="Label:"/>
+        <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding AxisLabel.Label, UpdateSourceTrigger=PropertyChanged}" />
+        
+        <CheckBox Grid.Column="0" Grid.Row="1" Content="MajorGridVisible" VerticalAlignment="Center" IsChecked="{Binding AxisTicks.MajorGridVisible, UpdateSourceTrigger=PropertyChanged}"/>
+        <CheckBox Grid.Column="1" Grid.Row="1" Content="MinorGridVisible" VerticalAlignment="Center" IsChecked="{Binding AxisTicks.MinorGridVisible, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <CheckBox Grid.Column="0" Grid.Row="2" Content="MajorTickVisible" VerticalAlignment="Center" IsChecked="{Binding AxisTicks.MajorTickVisible, UpdateSourceTrigger=PropertyChanged}"/>
+        <CheckBox Grid.Column="1" Grid.Row="2" Content="MinorTickVisible" VerticalAlignment="Center" IsChecked="{Binding AxisTicks.MinorTickVisible, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <CheckBox Grid.Column="0" Grid.Row="3" Content="TickLabelVisible" VerticalAlignment="Center" IsChecked="{Binding AxisTicks.TickLabelVisible, UpdateSourceTrigger=PropertyChanged}"/>
+        <CheckBox Grid.Column="1" Grid.Row="3" Content="TicksExtendOutward" VerticalAlignment="Center" IsChecked="{Binding AxisTicks.TicksExtendOutward, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <CheckBox Grid.Column="0" Grid.Row="4" Content="IsVisible" VerticalAlignment="Center" IsChecked="{Binding IsVisible, UpdateSourceTrigger=PropertyChanged}"/>
+        <xctk:ColorPicker Grid.Column="1" Grid.Row="4" SelectedColor="{Binding Color, Converter={StaticResource ColorConverter}, UpdateSourceTrigger=PropertyChanged}" />
+    </Grid>
+</UserControl>

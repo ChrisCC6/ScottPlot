@@ -47,7 +47,8 @@ namespace ScottPlot.Renderable
 
         // major tick/grid styling
         private bool majorTickVisible = true;
-        public bool MajorTickVisible { get => majorTickVisible; set { majorTickVisible = value; OnPropertyChanged(); } }
+        public bool MajorTickVisible { get => majorTickVisible; 
+            set { majorTickVisible = value; OnPropertyChanged(); } }
         private float majorTickLength = 5;
         public float MajorTickLength { get => majorTickLength; set { majorTickLength = value; OnPropertyChanged(); } }
         private Color majorTickColor = Color.Black;

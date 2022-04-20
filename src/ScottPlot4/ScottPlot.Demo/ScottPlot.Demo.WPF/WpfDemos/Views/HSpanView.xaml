@@ -10,7 +10,7 @@
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       d:DataContext="{d:DesignInstance Type=plottable:HSpan}"
       mc:Ignorable="d" 
-      d:DesignHeight="80" d:DesignWidth="300"
+      d:DesignHeight="75" d:DesignWidth="300"
       >
     <UserControl.Resources>
         <converter:ColorConverter x:Key="ColorConverter"/>
@@ -21,9 +21,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="26" />
-            <RowDefinition Height="26" />
-            <RowDefinition Height="26" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
         </Grid.RowDefinitions>
         <TextBlock Grid.Column="0" Grid.Row="0" Text="Y1:"/>
         <Slider Grid.Column="1" Grid.Row="0" Minimum="0" Maximum="51" Value="{Binding X1, UpdateSourceTrigger=PropertyChanged}"/>

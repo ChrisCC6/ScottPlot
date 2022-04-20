@@ -38,6 +38,16 @@ namespace ScottPlot.Demo.WPF.WpfDemos
             Axes.Add(Renderable.Edge.Top, 2);
             Axes.Add(Renderable.Edge.Right, 2);
 
+            Axes[1].AxisTicks.MajorTickVisible = true;
+            Axes[1].AxisTicks.TickLabelVisible = true;
+            Axes[1].AxisTicks.MinorTickVisible = true;
+            Axes[1].AxisTicks.MajorGridVisible = true;
+
+            Axes[3].AxisTicks.MajorTickVisible = true;
+            Axes[3].AxisTicks.TickLabelVisible = true;
+            Axes[3].AxisTicks.MinorTickVisible = true;
+            Axes[3].AxisTicks.MajorGridVisible = true;
+
             int pointCount = 51;
             double[] x = DataGen.Consecutive(pointCount);
             double[] sin = DataGen.Sin(pointCount);
@@ -50,9 +60,24 @@ namespace ScottPlot.Demo.WPF.WpfDemos
             sp1.Label = "sin SignalPlot";
             Plottables.Add(sp1);
 
+
+            SignalPlotXY sp2 = new SignalPlotXY();
+            sp2.Xs = x;
+            sp2.Ys = sin;
+            sp2.OffsetX = 2;
+            sp2.MinRenderIndex = 0;
+            sp2.MaxRenderIndex = sp1.Ys.Length - 1;
+            sp2.Label = "sin SignalPlot 2";
+            sp2.XAxisIndex = 1;
+            sp2.YAxisIndex = 1;
+            Plottables.Add(sp2);
+
+
+
             double[] cos = DataGen.Cos(pointCount);
             ScatterPlot sp3 = new ScatterPlot(x, cos);
-            sp3.YAxisIndex = 2;
+            sp3.YAxisIndex = 1;
+            sp3.XAxisIndex = 1;
             sp3.Label = "cos ScatterPlot";
             Plottables.Add(sp3);
 
@@ -127,9 +152,6 @@ namespace ScottPlot.Demo.WPF.WpfDemos
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         public event PropertyChangedEventHandler PropertyChanged;
-
-
-
 
     }
 }

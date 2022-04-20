@@ -10,7 +10,7 @@
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       d:DataContext="{d:DesignInstance Type=plottable:ScatterPlot}"
       mc:Ignorable="d" 
-      d:DesignHeight="60" d:DesignWidth="300"
+      d:DesignHeight="100" d:DesignWidth="300"
       >
     <UserControl.Resources>
         <converter:ColorConverter x:Key="ColorConverter"/>
@@ -26,13 +26,21 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="26" />
-            <RowDefinition Height="26" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="25" />
         </Grid.RowDefinitions>
         <TextBlock Grid.Column="0" Grid.Row="0" Text="Marker:"/>
         <ComboBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Source={StaticResource MarkerShapesList}}" SelectedItem="{Binding MarkerShape, UpdateSourceTrigger=PropertyChanged}" />
 
-        <TextBlock Grid.Column="0" Grid.Row="1" Text="Color:"/>
-        <xctk:ColorPicker Grid.Column="1" Grid.Row="1" SelectedColor="{Binding Color, Converter={StaticResource ColorConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="Y-AxisIndex:"/>
+        <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding YAxisIndex}" />
+
+        <TextBlock Grid.Column="0" Grid.Row="2" Text="X-AxisIndex:"/>
+        <TextBox Grid.Column="1" Grid.Row="2"  Text="{Binding XAxisIndex}"/>
+
+        <TextBlock Grid.Column="0" Grid.Row="3" Text="Color:"/>
+        <xctk:ColorPicker Grid.Column="1" Grid.Row="3" SelectedColor="{Binding Color, Converter={StaticResource ColorConverter}, UpdateSourceTrigger=PropertyChanged}" />
     </Grid>
 </UserControl>
